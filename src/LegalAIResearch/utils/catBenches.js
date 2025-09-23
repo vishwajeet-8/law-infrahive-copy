@@ -1,0 +1,21 @@
+export const catBenches = [
+  {"id": "226f76b5", "name": "CHENNAI"},
+  {"id": "27badc98", "name": "JABALPUR"},
+  {"id": "2abaca49", "name": "AHMEDABAD"},
+  {"id": "2ac878b0", "name": "JAMMU"},
+  {"id": "3038bfb5", "name": "SRINAGAR"},
+  {"id": "33512007", "name": "JAIPUR"},
+  {"id": "39bb88f4", "name": "CUTTACK"},
+  {"id": "39fa9ec1", "name": "CHANDIGARH"},
+  {"id": "454f63ac", "name": "BANGALORE"},
+  {"id": "5426d2ca", "name": "ALLAHABAD"},
+  {"id": "6f4b6612", "name": "HYDERABAD"},
+  {"id": "7104741a", "name": "LUCKNOW"},
+  {"id": "7b697596", "name": "ERNAKULAM"},
+  {"id": "ad573668", "name": "DELHI"},
+  {"id": "d29d5370", "name": "MUMBAI"},
+  {"id": "d59eced1", "name": "GUWAHATI"},
+  {"id": "deeeb5df", "name": "KOLKATA"},
+  {"id": "e5b861a6", "name": "PATNA"},
+  {"id": "f6e0a1e2", "name": "JODHPUR"}
+]

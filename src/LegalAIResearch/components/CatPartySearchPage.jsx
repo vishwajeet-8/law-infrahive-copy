@@ -386,7 +386,7 @@
 //       await api.post(
 //         "/research-credit",
 //         {
-//           userId: JSON.parse(localStorage.getItem("user")).id,
+//           userId: sub,
 //           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
 //         },
 //         {
@@ -1159,14 +1159,19 @@
 
 // export default CatPartySearchPage;
 
-
-
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { AlertTriangle, Search, Star, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import CatCaseDetailsModal from "./CatCaseDetailsModal";
 import { catBenches } from "../utils/catBenches";
+import { jwtDecode } from "jwt-decode";
 
 // Custom debounce function
 const debounce = (func, wait) => {
@@ -1178,7 +1183,14 @@ const debounce = (func, wait) => {
 };
 
 // Custom SearchableSelect component for benches dropdown
-const SearchableSelect = ({ options, value, onChange, placeholder, label, id }) => {
+const SearchableSelect = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+  label,
+  id,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
@@ -1267,8 +1279,8 @@ const SearchableSelect = ({ options, value, onChange, placeholder, label, id }) 
 
 const CatPartySearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [name, setName] = useState("");
   const [type, setType] = useState("");
@@ -1549,7 +1561,9 @@ const CatPartySearchPage = ({ court }) => {
 
     try {
       const { data } = await api.post(
-        `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/central-administrative-tribunal/diary-number/`,
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }legal-infrahive/central-administrative-tribunal/diary-number/`,
         {
           benchId: finalBenchId,
           diaryNumber: diaryNum,
@@ -1566,7 +1580,7 @@ const CatPartySearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
         {
@@ -1670,6 +1684,8 @@ const CatPartySearchPage = ({ court }) => {
       setError("Please enter a party name");
       return;
     }
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     setIsLoading(true);
     setError(null);
@@ -1712,7 +1728,7 @@ const CatPartySearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
         {
@@ -1796,8 +1812,8 @@ const CatPartySearchPage = ({ court }) => {
       key: "followed_at",
       direction: "desc",
     });
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const role = user?.role || "Member";
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
     const isOwner = role === "Owner";
 
     useEffect(() => {
@@ -2395,7 +2411,8 @@ const CatPartySearchPage = ({ court }) => {
                               }
                             >
                               {detailsLoading &&
-                              selectedCase?.diaryNumber === caseItem.diaryNumber ? (
+                              selectedCase?.diaryNumber ===
+                                caseItem.diaryNumber ? (
                                 <span className="flex items-center">
                                   <svg
                                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-800"

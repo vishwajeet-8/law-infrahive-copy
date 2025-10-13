@@ -1,7 +1,3 @@
-
-
-
-
 // import React, { useState, useEffect, useCallback } from "react";
 // import { Search, Star, ShoppingCart, X } from "lucide-react";
 // import NcltCaseDetailsModal from "./NcltCaseDetailsModal";
@@ -261,13 +257,13 @@
 //       setError("Please enter bench ID and party name");
 //       return;
 //     }
-  
+
 //     setIsLoading(true);
 //     setError(null);
 //     setTableSearchQuery("");
 //     setSearchResults(null);
 //     setOriginalSearchResults(null);
-  
+
 //     try {
 //       const requestBody = {
 //         benchId,
@@ -276,7 +272,7 @@
 //         year,
 //         name,
 //       };
-      
+
 //       const { data } = await api.post(
 //         `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/national-company-law-tribunal/search/party/`,
 //         requestBody,
@@ -286,15 +282,15 @@
 //           },
 //         }
 //       );
-  
+
 //       // Check for API errors first
 //       if (data.success === false) {
 //         throw new Error(data.error || "No cases found");
 //       }
-      
+
 //       // Define resultsArray after getting the response
 //       const resultsArray = Array.isArray(data) ? data : data.data || [];
-  
+
 //       // Now use resultsArray for the research credit API call
 //       await api.post(
 //         "/research-credit",
@@ -308,7 +304,7 @@
 //           },
 //         }
 //       );
-      
+
 //       setOriginalSearchResults(resultsArray);
 //       setSearchResults(resultsArray);
 //     } catch (err) {
@@ -1194,13 +1190,13 @@
 
 // export default NcltPartySearchPage;
 
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search, Star, ShoppingCart, X } from "lucide-react";
 import NcltCaseDetailsModal from "./NcltCaseDetailsModal";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { ncltBenches } from "../utils/ncltBenches";
+import { jwtDecode } from "jwt-decode";
 
 // Custom debounce function to avoid lodash dependency
 const debounce = (func, wait) => {
@@ -1213,8 +1209,8 @@ const debounce = (func, wait) => {
 
 const NcltPartySearchPage = () => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [benchId, setBenchId] = useState("");
   const [partyType, setPartyType] = useState("");
@@ -1313,7 +1309,10 @@ const NcltPartySearchPage = () => {
   // Handle click outside to close year dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (yearInputRef.current && !yearInputRef.current.contains(event.target)) {
+      if (
+        yearInputRef.current &&
+        !yearInputRef.current.contains(event.target)
+      ) {
         setShowYearDropdown(false);
       }
     };
@@ -1484,6 +1483,8 @@ const NcltPartySearchPage = () => {
     setTableSearchQuery("");
     setSearchResults(null);
     setOriginalSearchResults(null);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const requestBody = {
@@ -1495,7 +1496,9 @@ const NcltPartySearchPage = () => {
       };
 
       const { data } = await api.post(
-        `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/national-company-law-tribunal/search/party/`,
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }legal-infrahive/national-company-law-tribunal/search/party/`,
         requestBody,
         {
           headers: {
@@ -1516,7 +1519,7 @@ const NcltPartySearchPage = () => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
         {
@@ -1546,10 +1549,14 @@ const NcltPartySearchPage = () => {
     setDetailsLoading(true);
     setDetailsError(null);
     setSelectedFilingNumber(filingNumber);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const { data } = await api.post(
-        `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/national-company-law-tribunal/filing-number/`,
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }legal-infrahive/national-company-law-tribunal/filing-number/`,
         { filingNumber },
         {
           headers: {
@@ -1561,7 +1568,7 @@ const NcltPartySearchPage = () => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {
@@ -1606,7 +1613,8 @@ const NcltPartySearchPage = () => {
             result.caseNumber.toLowerCase().includes(query)) ||
           (result.title && result.title.toLowerCase().includes(query)) ||
           (result.bench && result.bench.toLowerCase().includes(query)) ||
-          (result.courtNumber && result.courtNumber.toString().includes(query)) ||
+          (result.courtNumber &&
+            result.courtNumber.toString().includes(query)) ||
           (result.status && result.status.toLowerCase().includes(query))
       );
       setSearchResults(filtered);
@@ -1634,8 +1642,8 @@ const NcltPartySearchPage = () => {
   };
 
   const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const role = user?.role || "Member";
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
     const isOwner = role === "Owner";
     const [searchQuery, setSearchQuery] = useState("");
     const [sortConfig, setSortConfig] = useState({
@@ -2072,7 +2080,8 @@ const NcltPartySearchPage = () => {
                 <p className="text-xs text-red-600 font-medium">{error}</p>
                 {error.includes("403") && (
                   <p className="mt-1 text-xs text-red-500">
-                    This could be due to an expired session or authentication issue.
+                    This could be due to an expired session or authentication
+                    issue.
                   </p>
                 )}
                 <div className="mt-2">
@@ -2099,7 +2108,9 @@ const NcltPartySearchPage = () => {
                   Search Results
                 </h3>
                 <p className="mt-1 text-xs text-gray-600">
-                  Found {Array.isArray(searchResults) ? searchResults.length : 0} cases
+                  Found{" "}
+                  {Array.isArray(searchResults) ? searchResults.length : 0}{" "}
+                  cases
                 </p>
               </div>
             </div>
@@ -2126,7 +2137,8 @@ const NcltPartySearchPage = () => {
                         colSpan={isOwner ? 11 : 10}
                         className="text-sm text-gray-600 text-center py-4"
                       >
-                        {!originalSearchResults || originalSearchResults.length === 0
+                        {!originalSearchResults ||
+                        originalSearchResults.length === 0
                           ? "No records found matching your search criteria."
                           : "No records match your filter criteria."}
                       </td>
@@ -2264,14 +2276,16 @@ const NcltPartySearchPage = () => {
                               <button
                                 className={`flex items-center justify-center space-x-1 px-2 py-1 text-xs font-medium rounded-md transition-colors ${
                                   followedCases.some(
-                                    (c) => c.filing_number === result.filingNumber
+                                    (c) =>
+                                      c.filing_number === result.filingNumber
                                   )
                                     ? "text-yellow-700 bg-yellow-100 hover:bg-yellow-200"
                                     : "text-gray-700 bg-gray-100 hover:bg-gray-200"
                                 }`}
                                 onClick={() =>
                                   followedCases.some(
-                                    (c) => c.filing_number === result.filingNumber
+                                    (c) =>
+                                      c.filing_number === result.filingNumber
                                   )
                                     ? handleUnfollowCase(result.filingNumber)
                                     : handleFollowCase(result, index)
@@ -2288,7 +2302,8 @@ const NcltPartySearchPage = () => {
                                       className={
                                         followedCases.some(
                                           (c) =>
-                                            c.filing_number === result.filingNumber
+                                            c.filing_number ===
+                                            result.filingNumber
                                         )
                                           ? "text-yellow-600 fill-yellow-500"
                                           : ""
@@ -2297,7 +2312,8 @@ const NcltPartySearchPage = () => {
                                     <span>
                                       {followedCases.some(
                                         (c) =>
-                                          c.filing_number === result.filingNumber
+                                          c.filing_number ===
+                                          result.filingNumber
                                       )
                                         ? "Following"
                                         : "Follow"}

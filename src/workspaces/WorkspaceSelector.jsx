@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 export default function WorkspaceSelector({ workspaces, loading, error }) {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
-
+  console.log(workspaces);
   const handleChange = (e) => {
     if (e.target.value) {
       navigate(`/workspaces/${e.target.value}`);

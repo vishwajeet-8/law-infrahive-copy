@@ -17,11 +17,12 @@ import {
 } from "lucide-react";
 import api from "@/utils/api";
 import { useParams } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const ConsumerForumCaseDetails = () => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [caseNumber, setCaseNumber] = useState("");
   const [caseDetails, setCaseDetails] = useState(null);
@@ -42,6 +43,8 @@ const ConsumerForumCaseDetails = () => {
       setError("Please enter a valid case number");
       return;
     }
+    const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
 
     setIsLoading(true);
     setError(null);
@@ -58,11 +61,12 @@ const ConsumerForumCaseDetails = () => {
           },
         }
       );
+      
       const data = response.data;
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {

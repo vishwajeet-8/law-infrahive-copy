@@ -233,7 +233,6 @@ const Sidebar = ({
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
 
-
   const handleNewsHubClick = () => {
     if (onNewsHubClick) {
       onNewsHubClick();
@@ -251,6 +250,8 @@ const Sidebar = ({
       onCourtDashboardClick();
     }
   };
+
+  // No-op for agent click; navigation handled via route URL
 
   const handleCreateWorkspaceClick = () => {
     setIsWorkspaceModalOpen(true);
@@ -311,6 +312,18 @@ const Sidebar = ({
       bgColor: "hover:bg-indigo-50",
       borderColor: "hover:border-indigo-200",
       category: "insights",
+    },
+    {
+      id: "legalairesearchagent",
+      title: "AI Research Agent",
+      icon: <Database size={18} />,
+      url: `/workspaces/${workspaceId}/ai-research-agent`,
+      description: "Do research with simple language",
+      iconColor: "text-indigo-600",
+      bgColor: "hover:bg-indigo-50",
+      borderColor: "hover:border-indigo-200",
+      category: "insights",
+      beta: true,
     },
     {
       id: "documents",
@@ -416,8 +429,13 @@ const Sidebar = ({
           </div>
           {isExpanded && (
             <div className="ml-3 text-left flex-1">
-              <div className="text-sm font-semibold text-gray-800 group-hover:text-gray-900">
-                {page.title}
+              <div className="text-sm font-semibold text-gray-800 group-hover:text-gray-900 flex items-center gap-2">
+                <span>{page.title}</span>
+                {page.beta && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">
+                    Beta
+                  </span>
+                )}
               </div>
               <div className="text-xs text-gray-500 group-hover:text-gray-600">
                 {page.description}
@@ -447,13 +465,18 @@ const Sidebar = ({
             {isExpanded && (
               <div className="ml-3 text-left flex-1">
                 <div
-                  className={`text-sm font-semibold transition-colors duration-200 ${
+                  className={`text-sm font-semibold transition-colors duration-200 flex items-center gap-2 ${
                     isActive
                       ? `text-${page.iconColor.split("-")[1]}-800`
                       : "text-gray-800 group-hover:text-gray-900"
                   }`}
                 >
-                  {page.title}
+                  <span>{page.title}</span>
+                  {page.beta && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">
+                      Beta
+                    </span>
+                  )}
                 </div>
                 <div
                   className={`text-xs transition-colors duration-200 ${
@@ -577,14 +600,10 @@ const Sidebar = ({
                 </div>
               </div>
             </div>
-
-          
           </nav>
 
           {/* Bottom Actions with enhanced styling */}
           <div className="p-4 border-t border-gray-200/50 flex-shrink-0 space-y-3 bg-gradient-to-r from-white/90 to-gray-50/90 backdrop-blur-sm">
-           
-
             {/* Logout Button with enhanced styling */}
             <button
               onClick={handleLogout}

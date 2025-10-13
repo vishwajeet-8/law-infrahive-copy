@@ -40,6 +40,7 @@ function Layout() {
         const res = await api.get("/get-workspaces", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log(res.data);
         setWorkspaces(res.data);
         setError(null);
       } catch (err) {

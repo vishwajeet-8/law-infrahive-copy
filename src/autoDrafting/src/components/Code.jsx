@@ -1,33 +1,31 @@
-
-
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
-import Placeholder from '@tiptap/extension-placeholder';
-import CharacterCount from '@tiptap/extension-character-count';
-import FontFamily from '@tiptap/extension-font-family';
-import TextStyle from '@tiptap/extension-text-style';
-import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { 
-  Bold, 
-  Italic, 
-  Underline as UnderlineIcon, 
-  Strikethrough, 
-  Code, 
-  List, 
-  ListOrdered, 
-  Quote, 
-  Undo, 
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import Table from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableHeader from "@tiptap/extension-table-header";
+import TableCell from "@tiptap/extension-table-cell";
+import Placeholder from "@tiptap/extension-placeholder";
+import CharacterCount from "@tiptap/extension-character-count";
+import FontFamily from "@tiptap/extension-font-family";
+import TextStyle from "@tiptap/extension-text-style";
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  Code,
+  List,
+  ListOrdered,
+  Quote,
+  Undo,
   Redo,
   AlignLeft,
   AlignCenter,
@@ -51,17 +49,17 @@ import {
   Download,
   FileDown,
   FolderOpen,
-  File
-} from 'lucide-react';
+  File,
+} from "lucide-react";
 
 // Custom Font Size Extension
 const FontSize = Extension.create({
-  name: 'fontSize',
+  name: "fontSize",
 
   addOptions() {
     return {
-      types: ['textStyle'],
-    }
+      types: ["textStyle"],
+    };
   },
 
   addGlobalAttributes() {
@@ -71,73 +69,82 @@ const FontSize = Extension.create({
         attributes: {
           fontSize: {
             default: null,
-            parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
-            renderHTML: attributes => {
+            parseHTML: (element) =>
+              element.style.fontSize.replace(/['"]+/g, ""),
+            renderHTML: (attributes) => {
               if (!attributes.fontSize) {
-                return {}
+                return {};
               }
               return {
                 style: `font-size: ${attributes.fontSize}`,
-              }
+              };
             },
           },
         },
       },
-    ]
+    ];
   },
 
   addCommands() {
     return {
-      setFontSize: fontSize => ({ chain }) => {
-        return chain()
-          .setMark('textStyle', { fontSize })
-          .run()
-      },
-      unsetFontSize: () => ({ chain }) => {
-        return chain()
-          .setMark('textStyle', { fontSize: null })
-          .removeEmptyTextStyle()
-          .run()
-      },
-    }
+      setFontSize:
+        (fontSize) =>
+        ({ chain }) => {
+          return chain().setMark("textStyle", { fontSize }).run();
+        },
+      unsetFontSize:
+        () =>
+        ({ chain }) => {
+          return chain()
+            .setMark("textStyle", { fontSize: null })
+            .removeEmptyTextStyle()
+            .run();
+        },
+    };
   },
-})
+});
 
 // Slash Commands Extension
 const SlashCommands = Extension.create({
-  name: 'slashCommands',
-  
+  name: "slashCommands",
+
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        key: new PluginKey('slashCommands'),
+        key: new PluginKey("slashCommands"),
         state: {
           init() {
             return {
               active: false,
               range: null,
-              query: '',
+              query: "",
             };
           },
           apply(tr, prev) {
             const { selection } = tr;
             const { from, to } = selection;
-            const text = tr.doc.textBetween(from - 1, to, '\0');
-            
-            if (text === '/') {
+            const text = tr.doc.textBetween(from - 1, to, "\0");
+
+            if (text === "/") {
               return {
                 active: true,
                 range: { from: from - 1, to },
-                query: '',
+                query: "",
               };
             }
-            
+
             if (prev.active) {
-              const slashIndex = tr.doc.textBetween(from - 10, from, '\0').lastIndexOf('/');
+              const slashIndex = tr.doc
+                .textBetween(from - 10, from, "\0")
+                .lastIndexOf("/");
               if (slashIndex !== -1) {
-                const query = tr.doc.textBetween(from - 10 + slashIndex + 1, from, '\0');
-                if (query.includes(' ') || query.length > 20) {
-                  return { active: false, range: null, query: '' };
+                const query = tr.doc.textBetween(
+                  from - 10 + slashIndex + 1,
+                  from,
+                  "\0"
+                );
+                if (query.includes(" ") || query.length > 20) {
+                  return { active: false, range: null, query: "" };
                 }
                 return {
                   active: true,
@@ -146,8 +153,8 @@ const SlashCommands = Extension.create({
                 };
               }
             }
-            
-            return { active: false, range: null, query: '' };
+
+            return { active: false, range: null, query: "" };
           },
         },
         props: {
@@ -168,87 +175,117 @@ const SlashMenu = ({ editor, range, query, onSelect }) => {
 
   const commands = [
     {
-      title: 'Heading 1',
-      description: 'Large heading',
+      title: "Heading 1",
+      description: "Large heading",
       icon: <Heading1 size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run(),
-      keywords: ['h1', 'heading', 'title', 'large'],
+      command: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setHeading({ level: 1 })
+          .run(),
+      keywords: ["h1", "heading", "title", "large"],
     },
     {
-      title: 'Heading 2',
-      description: 'Medium heading',
+      title: "Heading 2",
+      description: "Medium heading",
       icon: <Heading2 size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run(),
-      keywords: ['h2', 'heading', 'subtitle', 'medium'],
+      command: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setHeading({ level: 2 })
+          .run(),
+      keywords: ["h2", "heading", "subtitle", "medium"],
     },
     {
-      title: 'Heading 3',
-      description: 'Small heading',
+      title: "Heading 3",
+      description: "Small heading",
       icon: <Heading3 size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run(),
-      keywords: ['h3', 'heading', 'small'],
+      command: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setHeading({ level: 3 })
+          .run(),
+      keywords: ["h3", "heading", "small"],
     },
     {
-      title: 'Paragraph',
-      description: 'Normal text',
+      title: "Paragraph",
+      description: "Normal text",
       icon: <FileText size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).setParagraph().run(),
-      keywords: ['p', 'paragraph', 'text'],
+      command: () =>
+        editor.chain().focus().deleteRange(range).setParagraph().run(),
+      keywords: ["p", "paragraph", "text"],
     },
     {
-      title: 'Bullet List',
-      description: 'Unordered list',
+      title: "Bullet List",
+      description: "Unordered list",
       icon: <List size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).toggleBulletList().run(),
-      keywords: ['ul', 'list', 'bullet', 'unordered'],
+      command: () =>
+        editor.chain().focus().deleteRange(range).toggleBulletList().run(),
+      keywords: ["ul", "list", "bullet", "unordered"],
     },
     {
-      title: 'Numbered List',
-      description: 'Ordered list',
+      title: "Numbered List",
+      description: "Ordered list",
       icon: <ListOrdered size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
-      keywords: ['ol', 'list', 'numbered', 'ordered'],
+      command: () =>
+        editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
+      keywords: ["ol", "list", "numbered", "ordered"],
     },
     {
-      title: 'Quote',
-      description: 'Block quote',
+      title: "Quote",
+      description: "Block quote",
       icon: <Quote size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
-      keywords: ['quote', 'blockquote', 'citation'],
+      command: () =>
+        editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+      keywords: ["quote", "blockquote", "citation"],
     },
     {
-      title: 'Code Block',
-      description: 'Code snippet',
+      title: "Code Block",
+      description: "Code snippet",
       icon: <Code size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
-      keywords: ['code', 'codeblock', 'snippet', 'pre'],
+      command: () =>
+        editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+      keywords: ["code", "codeblock", "snippet", "pre"],
     },
     {
-      title: 'Table',
-      description: 'Insert table',
+      title: "Table",
+      description: "Insert table",
       icon: <TableIcon size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-      keywords: ['table', 'grid', 'data'],
+      command: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+          .run(),
+      keywords: ["table", "grid", "data"],
     },
     {
-      title: 'Horizontal Line',
-      description: 'Divider',
+      title: "Horizontal Line",
+      description: "Divider",
       icon: <Minus size={16} />,
-      command: () => editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
-      keywords: ['hr', 'line', 'divider', 'separator'],
+      command: () =>
+        editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
+      keywords: ["hr", "line", "divider", "separator"],
     },
     {
-      title: 'Image',
-      description: 'Insert image',
+      title: "Image",
+      description: "Insert image",
       icon: <ImageIcon size={16} />,
       command: () => {
         editor.chain().focus().deleteRange(range).run();
-        const url = prompt('Enter image URL:');
+        const url = prompt("Enter image URL:");
         if (url) {
           editor.chain().focus().setImage({ src: url }).run();
         }
       },
-      keywords: ['image', 'img', 'picture', 'photo'],
+      keywords: ["image", "img", "picture", "photo"],
     },
   ];
 
@@ -267,38 +304,38 @@ const SlashMenu = ({ editor, range, query, onSelect }) => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'ArrowUp') {
+      if (event.key === "ArrowUp") {
         event.preventDefault();
         setSelectedIndex((prevIndex) =>
           prevIndex > 0 ? prevIndex - 1 : filteredCommands.length - 1
         );
-      } else if (event.key === 'ArrowDown') {
+      } else if (event.key === "ArrowDown") {
         event.preventDefault();
         setSelectedIndex((prevIndex) =>
           prevIndex < filteredCommands.length - 1 ? prevIndex + 1 : 0
         );
-      } else if (event.key === 'Enter') {
+      } else if (event.key === "Enter") {
         event.preventDefault();
         if (filteredCommands[selectedIndex]) {
           filteredCommands[selectedIndex].command();
           onSelect();
         }
-      } else if (event.key === 'Escape') {
+      } else if (event.key === "Escape") {
         event.preventDefault();
         onSelect();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [selectedIndex, filteredCommands, onSelect]);
 
   if (filteredCommands.length === 0) {
     return (
-      <div 
+      <div
         ref={menuRef}
         className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg w-72 p-2"
-        style={{ transform: 'translateY(8px)' }}
+        style={{ transform: "translateY(8px)" }}
       >
         <div className="text-gray-500 text-sm p-2">No commands found</div>
       </div>
@@ -306,13 +343,13 @@ const SlashMenu = ({ editor, range, query, onSelect }) => {
   }
 
   return (
-    <div 
+    <div
       ref={menuRef}
       className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg w-72 max-h-64 overflow-y-auto"
-      style={{ transform: 'translateY(8px)' }}
+      style={{ transform: "translateY(8px)" }}
     >
       <div className="p-2 border-b border-gray-100 text-xs text-gray-500 font-medium">
-        {query ? `Commands matching "${query}"` : 'Commands'}
+        {query ? `Commands matching "${query}"` : "Commands"}
       </div>
       {filteredCommands.map((command, index) => (
         <button
@@ -322,13 +359,19 @@ const SlashMenu = ({ editor, range, query, onSelect }) => {
             onSelect();
           }}
           className={`w-full text-left p-3 hover:bg-gray-50 flex items-center gap-3 transition-colors ${
-            index === selectedIndex ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+            index === selectedIndex
+              ? "bg-blue-50 border-r-2 border-blue-500"
+              : ""
           }`}
         >
           <div className="text-gray-400 flex-shrink-0">{command.icon}</div>
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm text-gray-900">{command.title}</div>
-            <div className="text-xs text-gray-500 truncate">{command.description}</div>
+            <div className="font-medium text-sm text-gray-900">
+              {command.title}
+            </div>
+            <div className="text-xs text-gray-500 truncate">
+              {command.description}
+            </div>
           </div>
         </button>
       ))}
@@ -337,7 +380,14 @@ const SlashMenu = ({ editor, range, query, onSelect }) => {
 };
 
 // Enhanced Font Dropdown Component
-const FontDropdown = ({ value, onChange, options, placeholder, icon, className = "" }) => {
+const FontDropdown = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+  icon,
+  className = "",
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -348,11 +398,12 @@ const FontDropdown = ({ value, onChange, options, placeholder, icon, className =
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedOption = options.find(opt => opt.value === value) || options[0];
+  const selectedOption =
+    options.find((opt) => opt.value === value) || options[0];
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
@@ -366,9 +417,13 @@ const FontDropdown = ({ value, onChange, options, placeholder, icon, className =
             {selectedOption.label}
           </span>
         </div>
-        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 text-gray-400 transition-transform ${
+            isOpen ? "transform rotate-180" : ""
+          }`}
+        />
       </button>
-      
+
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           <div className="p-2 border-b border-gray-100 text-xs text-gray-500 font-medium">
@@ -382,7 +437,9 @@ const FontDropdown = ({ value, onChange, options, placeholder, icon, className =
                 setIsOpen(false);
               }}
               className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center transition-colors ${
-                value === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-900'
+                value === option.value
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-900"
               }`}
               style={option.style || {}}
             >
@@ -399,63 +456,111 @@ const FontDropdown = ({ value, onChange, options, placeholder, icon, className =
 };
 
 const TiptapEditor = () => {
-  const [linkUrl, setLinkUrl] = useState('');
+  const [linkUrl, setLinkUrl] = useState("");
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState("");
   const [editorState, setEditorState] = useState({});
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashMenuPosition, setSlashMenuPosition] = useState({ x: 0, y: 0 });
-  const [slashQuery, setSlashQuery] = useState('');
+  const [slashQuery, setSlashQuery] = useState("");
   const [slashRange, setSlashRange] = useState(null);
   const [showTableMenu, setShowTableMenu] = useState(false);
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(3);
   const [tableWithHeader, setTableWithHeader] = useState(true);
-  const [customFontSize, setCustomFontSize] = useState('');
+  const [customFontSize, setCustomFontSize] = useState("");
   const [showCustomFontSizeInput, setShowCustomFontSizeInput] = useState(false);
-  const [documentTitle, setDocumentTitle] = useState('Untitled Document');
+  const [documentTitle, setDocumentTitle] = useState("Untitled Document");
   const [showSaveAsModal, setShowSaveAsModal] = useState(false);
-  const [saveAsTitle, setSaveAsTitle] = useState('');
+  const [saveAsTitle, setSaveAsTitle] = useState("");
   const tableMenuRef = useRef(null);
 
   // Enhanced Font options with better organization
   const fontFamilies = [
-    { label: 'Default Font', value: 'inherit' },
-    { label: 'Sans Serif Fonts', value: '', disabled: true },
-    { label: 'Inter', value: 'Inter, sans-serif', style: { fontFamily: 'Inter, sans-serif' } },
-    { label: 'Helvetica', value: 'Helvetica, sans-serif', style: { fontFamily: 'Helvetica, sans-serif' } },
-    { label: 'Arial', value: 'Arial, sans-serif', style: { fontFamily: 'Arial, sans-serif' } },
-    { label: 'Roboto', value: 'Roboto, sans-serif', style: { fontFamily: 'Roboto, sans-serif' } },
-    { label: 'Open Sans', value: 'Open Sans, sans-serif', style: { fontFamily: 'Open Sans, sans-serif' } },
-    { label: 'Verdana', value: 'Verdana, sans-serif', style: { fontFamily: 'Verdana, sans-serif' } },
-    { label: 'Serif Fonts', value: '', disabled: true },
-    { label: 'Times New Roman', value: 'Times New Roman, serif', style: { fontFamily: 'Times New Roman, serif' } },
-    { label: 'Georgia', value: 'Georgia, serif', style: { fontFamily: 'Georgia, serif' } },
-    { label: 'Playfair Display', value: 'Playfair Display, serif', style: { fontFamily: 'Playfair Display, serif' } },
-    { label: 'Monospace Fonts', value: '', disabled: true },
-    { label: 'Monaco', value: 'Monaco, monospace', style: { fontFamily: 'Monaco, monospace' } },
-    { label: 'Courier New', value: 'Courier New, monospace', style: { fontFamily: 'Courier New, monospace' } },
-    { label: 'Source Code Pro', value: 'Source Code Pro, monospace', style: { fontFamily: 'Source Code Pro, monospace' } },
+    { label: "Default Font", value: "inherit" },
+    { label: "Sans Serif Fonts", value: "", disabled: true },
+    {
+      label: "Inter",
+      value: "Inter, sans-serif",
+      style: { fontFamily: "Inter, sans-serif" },
+    },
+    {
+      label: "Helvetica",
+      value: "Helvetica, sans-serif",
+      style: { fontFamily: "Helvetica, sans-serif" },
+    },
+    {
+      label: "Arial",
+      value: "Arial, sans-serif",
+      style: { fontFamily: "Arial, sans-serif" },
+    },
+    {
+      label: "Roboto",
+      value: "Roboto, sans-serif",
+      style: { fontFamily: "Roboto, sans-serif" },
+    },
+    {
+      label: "Open Sans",
+      value: "Open Sans, sans-serif",
+      style: { fontFamily: "Open Sans, sans-serif" },
+    },
+    {
+      label: "Verdana",
+      value: "Verdana, sans-serif",
+      style: { fontFamily: "Verdana, sans-serif" },
+    },
+    { label: "Serif Fonts", value: "", disabled: true },
+    {
+      label: "Times New Roman",
+      value: "Times New Roman, serif",
+      style: { fontFamily: "Times New Roman, serif" },
+    },
+    {
+      label: "Georgia",
+      value: "Georgia, serif",
+      style: { fontFamily: "Georgia, serif" },
+    },
+    {
+      label: "Playfair Display",
+      value: "Playfair Display, serif",
+      style: { fontFamily: "Playfair Display, serif" },
+    },
+    { label: "Monospace Fonts", value: "", disabled: true },
+    {
+      label: "Monaco",
+      value: "Monaco, monospace",
+      style: { fontFamily: "Monaco, monospace" },
+    },
+    {
+      label: "Courier New",
+      value: "Courier New, monospace",
+      style: { fontFamily: "Courier New, monospace" },
+    },
+    {
+      label: "Source Code Pro",
+      value: "Source Code Pro, monospace",
+      style: { fontFamily: "Source Code Pro, monospace" },
+    },
   ];
 
   const fontSizes = [
-    { label: 'Default Text', value: '' },
-    { label: '6px', value: '6px' },
-    { label: '8px', value: '8px' },
-    { label: '10px', value: '10px' },
-    { label: '12px', value: '12px' },
-    { label: '14px', value: '14px' },
-    { label: '16px', value: '16px' },
-    { label: '18px', value: '18px' },
-    { label: '20px', value: '20px' },
-    { label: '24px', value: '24px' },
-    { label: '28px', value: '28px' },
-    { label: '32px', value: '32px' },
-    { label: '36px', value: '36px' },
-    { label: '42px', value: '42px' },
-    { label: '48px', value: '48px' },
-    { label: 'Custom Size...', value: 'custom' },
+    { label: "Default Text", value: "" },
+    { label: "6px", value: "6px" },
+    { label: "8px", value: "8px" },
+    { label: "10px", value: "10px" },
+    { label: "12px", value: "12px" },
+    { label: "14px", value: "14px" },
+    { label: "16px", value: "16px" },
+    { label: "18px", value: "18px" },
+    { label: "20px", value: "20px" },
+    { label: "24px", value: "24px" },
+    { label: "28px", value: "28px" },
+    { label: "32px", value: "32px" },
+    { label: "36px", value: "36px" },
+    { label: "42px", value: "42px" },
+    { label: "48px", value: "48px" },
+    { label: "Custom Size...", value: "custom" },
   ];
 
   const editor = useEditor({
@@ -475,14 +580,14 @@ const TiptapEditor = () => {
       FontFamily,
       FontSize,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right', 'justify'],
-        defaultAlignment: 'left',
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right", "justify"],
+        defaultAlignment: "left",
       }),
       Link.configure({
         openOnClick: false,
         autolink: true,
-        defaultProtocol: 'https',
+        defaultProtocol: "https",
       }),
       Image.configure({
         inline: false,
@@ -499,7 +604,7 @@ const TiptapEditor = () => {
       TableCell,
       Placeholder.configure({
         placeholder: ({ node }) => {
-          if (node.type.name === 'heading') {
+          if (node.type.name === "heading") {
             return `Heading ${node.attrs.level}`;
           }
           return 'Start typing or press "/" for commands...';
@@ -529,41 +634,41 @@ const TiptapEditor = () => {
     `,
     editorProps: {
       attributes: {
-        class: 'prose prose-lg max-w-none focus:outline-none',
+        class: "prose prose-lg max-w-none focus:outline-none",
       },
     },
     onUpdate: ({ editor }) => {
-      console.log('Content updated:', editor.getHTML());
+      console.log("Content updated:", editor.getHTML());
     },
   });
 
   // Force re-render when editor state changes
   const updateEditorState = useCallback(() => {
     if (!editor) return;
-    
+
     setEditorState({
-      bold: editor.isActive('bold'),
-      italic: editor.isActive('italic'),
-      underline: editor.isActive('underline'),
-      strike: editor.isActive('strike'),
-      code: editor.isActive('code'),
-      codeBlock: editor.isActive('codeBlock'),
-      bulletList: editor.isActive('bulletList'),
-      orderedList: editor.isActive('orderedList'),
-      blockquote: editor.isActive('blockquote'),
-      link: editor.isActive('link'),
-      table: editor.isActive('table'),
-      textAlignLeft: editor.isActive({ textAlign: 'left' }),
-      textAlignCenter: editor.isActive({ textAlign: 'center' }),
-      textAlignRight: editor.isActive({ textAlign: 'right' }),
-      heading1: editor.isActive('heading', { level: 1 }),
-      heading2: editor.isActive('heading', { level: 2 }),
-      heading3: editor.isActive('heading', { level: 3 }),
-      heading4: editor.isActive('heading', { level: 4 }),
-      heading5: editor.isActive('heading', { level: 5 }),
-      heading6: editor.isActive('heading', { level: 6 }),
-      fontSize: editor.getAttributes('textStyle').fontSize || '',
-      fontFamily: editor.getAttributes('textStyle').fontFamily || 'inherit',
+      bold: editor.isActive("bold"),
+      italic: editor.isActive("italic"),
+      underline: editor.isActive("underline"),
+      strike: editor.isActive("strike"),
+      code: editor.isActive("code"),
+      codeBlock: editor.isActive("codeBlock"),
+      bulletList: editor.isActive("bulletList"),
+      orderedList: editor.isActive("orderedList"),
+      blockquote: editor.isActive("blockquote"),
+      link: editor.isActive("link"),
+      table: editor.isActive("table"),
+      textAlignLeft: editor.isActive({ textAlign: "left" }),
+      textAlignCenter: editor.isActive({ textAlign: "center" }),
+      textAlignRight: editor.isActive({ textAlign: "right" }),
+      heading1: editor.isActive("heading", { level: 1 }),
+      heading2: editor.isActive("heading", { level: 2 }),
+      heading3: editor.isActive("heading", { level: 3 }),
+      heading4: editor.isActive("heading", { level: 4 }),
+      heading5: editor.isActive("heading", { level: 5 }),
+      heading6: editor.isActive("heading", { level: 6 }),
+      fontSize: editor.getAttributes("textStyle").fontSize || "",
+      fontFamily: editor.getAttributes("textStyle").fontFamily || "inherit",
     });
   }, [editor]);
 
@@ -578,15 +683,19 @@ const TiptapEditor = () => {
     const handleSelectionUpdate = ({ editor }) => {
       const { selection } = editor.state;
       const { from } = selection;
-      const textBefore = editor.state.doc.textBetween(Math.max(0, from - 10), from, '\0');
-      const slashIndex = textBefore.lastIndexOf('/');
-      
+      const textBefore = editor.state.doc.textBetween(
+        Math.max(0, from - 10),
+        from,
+        "\0"
+      );
+      const slashIndex = textBefore.lastIndexOf("/");
+
       if (slashIndex !== -1) {
         const query = textBefore.slice(slashIndex + 1);
-        if (!query.includes(' ') && query.length <= 20) {
+        if (!query.includes(" ") && query.length <= 20) {
           const { view } = editor;
           const coords = view.coordsAtPos(from);
-          
+
           setSlashQuery(query);
           setSlashRange({ from: from - query.length - 1, to: from });
           setSlashMenuPosition({ x: coords.left, y: coords.bottom });
@@ -594,49 +703,52 @@ const TiptapEditor = () => {
           return;
         }
       }
-      
+
       setShowSlashMenu(false);
     };
 
-    editor.on('selectionUpdate', handleSelectionUpdate);
-    editor.on('transaction', updateState);
-    editor.on('update', updateState);
-    editor.on('focus', updateState);
+    editor.on("selectionUpdate", handleSelectionUpdate);
+    editor.on("transaction", updateState);
+    editor.on("update", updateState);
+    editor.on("focus", updateState);
 
     // Initial state update
     updateState();
 
     return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
-      editor.off('transaction', updateState);
-      editor.off('update', updateState);
-      editor.off('focus', updateState);
+      editor.off("selectionUpdate", handleSelectionUpdate);
+      editor.off("transaction", updateState);
+      editor.off("update", updateState);
+      editor.off("focus", updateState);
     };
   }, [editor, updateEditorState]);
 
   useEffect(() => {
     // Add keyboard shortcuts
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Close table menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target)) {
+      if (
+        tableMenuRef.current &&
+        !tableMenuRef.current.contains(event.target)
+      ) {
         setShowTableMenu(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const MenuButton = ({ onClick, isActive, disabled, children, title }) => (
@@ -649,36 +761,39 @@ const TiptapEditor = () => {
       disabled={disabled}
       title={title}
       className={`p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-        isActive ? 'bg-blue-100 text-blue-600' : 'text-gray-700'
+        isActive ? "bg-blue-100 text-blue-600" : "text-gray-700"
       }`}
     >
       {children}
     </button>
   );
 
-  const MenuDivider = () => (
-    <div className="w-px h-6 bg-gray-300 mx-1" />
-  );
+  const MenuDivider = () => <div className="w-px h-6 bg-gray-300 mx-1" />;
 
   const setLink = useCallback(() => {
     if (!editor) return;
-    
-    const previousUrl = editor.getAttributes('link').href;
-    setLinkUrl(previousUrl || '');
+
+    const previousUrl = editor.getAttributes("link").href;
+    setLinkUrl(previousUrl || "");
     setShowLinkModal(true);
   }, [editor]);
 
   const handleSetLink = () => {
     if (!editor) return;
 
-    if (linkUrl === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+    if (linkUrl === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
     } else {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: linkUrl })
+        .run();
     }
-    
+
     setShowLinkModal(false);
-    setLinkUrl('');
+    setLinkUrl("");
   };
 
   const addImage = useCallback(() => {
@@ -690,16 +805,20 @@ const TiptapEditor = () => {
 
     editor.chain().focus().setImage({ src: imageUrl }).run();
     setShowImageModal(false);
-    setImageUrl('');
+    setImageUrl("");
   };
 
   const insertTable = () => {
     if (!editor) return;
-    editor.chain().focus().insertTable({ 
-      rows: tableRows, 
-      cols: tableCols, 
-      withHeaderRow: tableWithHeader 
-    }).run();
+    editor
+      .chain()
+      .focus()
+      .insertTable({
+        rows: tableRows,
+        cols: tableCols,
+        withHeaderRow: tableWithHeader,
+      })
+      .run();
     setShowTableMenu(false);
   };
 
@@ -747,7 +866,7 @@ const TiptapEditor = () => {
 
   const handleFontFamilyChange = (fontFamily) => {
     if (!editor) return;
-    if (fontFamily === 'inherit' || fontFamily === '') {
+    if (fontFamily === "inherit" || fontFamily === "") {
       editor.chain().focus().unsetFontFamily().run();
     } else {
       editor.chain().focus().setFontFamily(fontFamily).run();
@@ -756,13 +875,13 @@ const TiptapEditor = () => {
 
   const handleFontSizeChange = (fontSize) => {
     if (!editor) return;
-    
-    if (fontSize === 'custom') {
+
+    if (fontSize === "custom") {
       setShowCustomFontSizeInput(true);
       return;
     }
-    
-    if (fontSize === '') {
+
+    if (fontSize === "") {
       editor.chain().focus().unsetFontSize().run();
     } else {
       editor.chain().focus().setFontSize(fontSize).run();
@@ -771,46 +890,50 @@ const TiptapEditor = () => {
 
   const handleCustomFontSize = () => {
     if (!editor || !customFontSize) return;
-    
+
     let validSize = customFontSize.trim();
-    
+
     // Add 'px' if no unit is specified and it's a number
     if (/^\d+$/.test(validSize)) {
-      validSize += 'px';
+      validSize += "px";
     }
-    
+
     // Validate if it's a proper CSS size value
     if (/^(\d+(\.\d+)?(px|em|rem|pt|%)|\d+)$/.test(validSize)) {
       editor.chain().focus().setFontSize(validSize).run();
     }
-    
-    setCustomFontSize('');
+
+    setCustomFontSize("");
     setShowCustomFontSizeInput(false);
   };
 
   // Save and Export Functions
   const handleSave = () => {
     if (!editor) return;
-    
+
     const content = editor.getHTML();
     const docData = {
       title: documentTitle,
       content: content,
       lastModified: new Date().toISOString(),
     };
-    
+
     // Save to localStorage for demo purposes
-    const savedDocs = JSON.parse(localStorage.getItem('tiptap-documents') || '[]');
-    const existingIndex = savedDocs.findIndex(doc => doc.title === documentTitle);
-    
+    const savedDocs = JSON.parse(
+      localStorage.getItem("tiptap-documents") || "[]"
+    );
+    const existingIndex = savedDocs.findIndex(
+      (doc) => doc.title === documentTitle
+    );
+
     if (existingIndex >= 0) {
       savedDocs[existingIndex] = docData;
     } else {
       savedDocs.push(docData);
     }
-    
-    localStorage.setItem('tiptap-documents', JSON.stringify(savedDocs));
-    
+
+    localStorage.setItem("tiptap-documents", JSON.stringify(savedDocs));
+
     // Show success feedback
     alert(`Document "${documentTitle}" saved successfully!`);
   };
@@ -822,33 +945,35 @@ const TiptapEditor = () => {
 
   const confirmSaveAs = () => {
     if (!editor || !saveAsTitle.trim()) return;
-    
+
     const newTitle = saveAsTitle.trim();
     setDocumentTitle(newTitle);
-    
+
     const content = editor.getHTML();
     const docData = {
       title: newTitle,
       content: content,
       lastModified: new Date().toISOString(),
     };
-    
-    const savedDocs = JSON.parse(localStorage.getItem('tiptap-documents') || '[]');
+
+    const savedDocs = JSON.parse(
+      localStorage.getItem("tiptap-documents") || "[]"
+    );
     savedDocs.push(docData);
-    localStorage.setItem('tiptap-documents', JSON.stringify(savedDocs));
-    
+    localStorage.setItem("tiptap-documents", JSON.stringify(savedDocs));
+
     setShowSaveAsModal(false);
-    setSaveAsTitle('');
+    setSaveAsTitle("");
     alert(`Document saved as "${newTitle}"!`);
   };
 
   const handleExportPDF = () => {
     if (!editor) return;
-    
+
     // Create a new window for PDF generation
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     const content = editor.getHTML();
-    
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -966,10 +1091,10 @@ const TiptapEditor = () => {
         </body>
       </html>
     `;
-    
+
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    
+
     // Give the content time to load, then trigger print
     setTimeout(() => {
       printWindow.print();
@@ -978,9 +1103,9 @@ const TiptapEditor = () => {
 
   const handleExportDOCX = () => {
     if (!editor) return;
-    
+
     const content = editor.getHTML();
-    
+
     // Convert HTML to Word-compatible format
     const wordContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' 
@@ -1107,15 +1232,15 @@ const TiptapEditor = () => {
         </body>
       </html>
     `;
-    
+
     // Create blob with proper MIME type for Word
-    const blob = new Blob(['\ufeff', wordContent], {
-      type: 'application/msword'
+    const blob = new Blob(["\ufeff", wordContent], {
+      type: "application/msword",
     });
-    
+
     // Create download link
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `${documentTitle}.doc`;
     document.body.appendChild(a);
@@ -1130,7 +1255,9 @@ const TiptapEditor = () => {
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-600">Loading Enhanced Tiptap Editor...</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Loading Enhanced Tiptap Editor...
+            </p>
           </div>
         </div>
       </div>
@@ -1144,7 +1271,9 @@ const TiptapEditor = () => {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-gray-900">Rich Text Editor</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Rich Text Editor
+              </h2>
               <div className="flex items-center gap-2">
                 <MenuButton onClick={handleSave} title="Save Document (Ctrl+S)">
                   <Save size={16} />
@@ -1176,12 +1305,17 @@ const TiptapEditor = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 mt-1">
-              Full-featured editor with enhanced font controls and typography • Document: {documentTitle}
+              Full-featured editor with enhanced font controls and typography •
+              Document: {documentTitle}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-              {editor.storage.characterCount.characters()}/{editor.extensionManager.extensions.find(ext => ext.name === 'characterCount')?.options.limit || '∞'} chars
+              {editor.storage.characterCount.characters()}/
+              {editor.extensionManager.extensions.find(
+                (ext) => ext.name === "characterCount"
+              )?.options.limit || "∞"}{" "}
+              chars
             </span>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
               {editor.storage.characterCount.words()} words
@@ -1206,7 +1340,7 @@ const TiptapEditor = () => {
                 >
                   <Undo size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
                   onClick={() => editor.chain().focus().redo().run()}
                   disabled={!editor.can().chain().focus().redo().run()}
@@ -1222,18 +1356,18 @@ const TiptapEditor = () => {
                 <FontDropdown
                   value={editorState.fontFamily}
                   onChange={handleFontFamilyChange}
-                  options={fontFamilies.filter(font => !font.disabled)}
+                  options={fontFamilies.filter((font) => !font.disabled)}
                   placeholder="Select Font Family"
                   icon={<Type size={16} />}
                   className="min-w-[180px] h-10"
                 />
-                
+
                 <FontDropdown
                   value={editorState.fontSize}
                   onChange={handleFontSizeChange}
                   options={fontSizes}
                   placeholder="Size"
-                //   icon={<Palette size={16} />}
+                  //   icon={<Palette size={16} />}
                   className="w-[120px] h-10"
                 />
               </div>
@@ -1241,16 +1375,22 @@ const TiptapEditor = () => {
               {/* Headings */}
               <FontDropdown
                 value={
-                  editorState.heading1 ? '1' :
-                  editorState.heading2 ? '2' :
-                  editorState.heading3 ? '3' :
-                  editorState.heading4 ? '4' :
-                  editorState.heading5 ? '5' :
-                  editorState.heading6 ? '6' :
-                  'paragraph'
+                  editorState.heading1
+                    ? "1"
+                    : editorState.heading2
+                    ? "2"
+                    : editorState.heading3
+                    ? "3"
+                    : editorState.heading4
+                    ? "4"
+                    : editorState.heading5
+                    ? "5"
+                    : editorState.heading6
+                    ? "6"
+                    : "paragraph"
                 }
                 onChange={(value) => {
-                  if (value === 'paragraph') {
+                  if (value === "paragraph") {
                     editor.chain().focus().setParagraph().run();
                   } else {
                     const level = parseInt(value);
@@ -1258,13 +1398,13 @@ const TiptapEditor = () => {
                   }
                 }}
                 options={[
-                  { value: 'paragraph', label: 'Paragraph' },
-                  { value: '1', label: 'Heading 1' },
-                  { value: '2', label: 'Heading 2' },
-                  { value: '3', label: 'Heading 3' },
-                  { value: '4', label: 'Heading 4' },
-                  { value: '5', label: 'Heading 5' },
-                  { value: '6', label: 'Heading 6' }
+                  { value: "paragraph", label: "Paragraph" },
+                  { value: "1", label: "Heading 1" },
+                  { value: "2", label: "Heading 2" },
+                  { value: "3", label: "Heading 3" },
+                  { value: "4", label: "Heading 4" },
+                  { value: "5", label: "Heading 5" },
+                  { value: "6", label: "Heading 6" },
                 ]}
                 placeholder="Heading"
                 icon={<Hash size={16} />}
@@ -1277,43 +1417,63 @@ const TiptapEditor = () => {
                   onClick={() => editor.chain().focus().toggleBold().run()}
                   isActive={editorState.bold}
                   title="Bold (Cmd+B)"
-                  className={`p-2 rounded transition-colors ${editorState.bold ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.bold
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <Bold size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
                   onClick={() => editor.chain().focus().toggleItalic().run()}
                   isActive={editorState.italic}
                   title="Italic (Cmd+I)"
-                  className={`p-2 rounded transition-colors ${editorState.italic ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.italic
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <Italic size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
                   onClick={() => editor.chain().focus().toggleUnderline().run()}
                   isActive={editorState.underline}
                   title="Underline (Cmd+U)"
-                  className={`p-2 rounded transition-colors ${editorState.underline ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.underline
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <UnderlineIcon size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
                   onClick={() => editor.chain().focus().toggleStrike().run()}
                   isActive={editorState.strike}
                   title="Strikethrough"
-                  className={`p-2 rounded transition-colors ${editorState.strike ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.strike
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <Strikethrough size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
                   onClick={() => editor.chain().focus().toggleCode().run()}
                   isActive={editorState.code}
                   title="Inline Code"
-                  className={`p-2 rounded transition-colors ${editorState.code ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.code
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <Code size={16} />
                 </MenuButton>
@@ -1321,7 +1481,7 @@ const TiptapEditor = () => {
             </div>
 
             {/* Settings - Right aligned */}
-            <MenuButton 
+            <MenuButton
               title="Editor Settings"
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
@@ -1335,19 +1495,31 @@ const TiptapEditor = () => {
               {/* Lists Group */}
               <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-lg">
                 <MenuButton
-                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  onClick={() =>
+                    editor.chain().focus().toggleBulletList().run()
+                  }
                   isActive={editorState.bulletList}
                   title="Bullet List"
-                  className={`p-2 rounded transition-colors ${editorState.bulletList ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.bulletList
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <List size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
-                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  onClick={() =>
+                    editor.chain().focus().toggleOrderedList().run()
+                  }
                   isActive={editorState.orderedList}
                   title="Numbered List"
-                  className={`p-2 rounded transition-colors ${editorState.orderedList ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.orderedList
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <ListOrdered size={16} />
                 </MenuButton>
@@ -1356,10 +1528,16 @@ const TiptapEditor = () => {
               {/* Blocks Group */}
               <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-lg">
                 <MenuButton
-                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                  onClick={() =>
+                    editor.chain().focus().toggleBlockquote().run()
+                  }
                   isActive={editorState.blockquote}
                   title="Blockquote"
-                  className={`p-2 rounded transition-colors ${editorState.blockquote ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.blockquote
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <Quote size={16} />
                 </MenuButton>
@@ -1368,7 +1546,11 @@ const TiptapEditor = () => {
                   onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                   isActive={editorState.codeBlock}
                   title="Code Block"
-                  className={`p-2 rounded transition-colors ${editorState.codeBlock ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.codeBlock
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <Hash size={16} />
                 </MenuButton>
@@ -1377,28 +1559,46 @@ const TiptapEditor = () => {
               {/* Alignment Group */}
               <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-lg">
                 <MenuButton
-                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                  onClick={() =>
+                    editor.chain().focus().setTextAlign("left").run()
+                  }
                   isActive={editorState.textAlignLeft}
                   title="Align Left"
-                  className={`p-2 rounded transition-colors ${editorState.textAlignLeft ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.textAlignLeft
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <AlignLeft size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
-                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                  onClick={() =>
+                    editor.chain().focus().setTextAlign("center").run()
+                  }
                   isActive={editorState.textAlignCenter}
                   title="Align Center"
-                  className={`p-2 rounded transition-colors ${editorState.textAlignCenter ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.textAlignCenter
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <AlignCenter size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
-                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                  onClick={() =>
+                    editor.chain().focus().setTextAlign("right").run()
+                  }
                   isActive={editorState.textAlignRight}
                   title="Align Right"
-                  className={`p-2 rounded transition-colors ${editorState.textAlignRight ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.textAlignRight
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <AlignRight size={16} />
                 </MenuButton>
@@ -1410,11 +1610,15 @@ const TiptapEditor = () => {
                   onClick={setLink}
                   isActive={editorState.link}
                   title="Add Link (Cmd+K)"
-                  className={`p-2 rounded transition-colors ${editorState.link ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                  className={`p-2 rounded transition-colors ${
+                    editorState.link
+                      ? "bg-blue-100 text-blue-600"
+                      : "hover:bg-white"
+                  }`}
                 >
                   <LinkIcon size={16} />
                 </MenuButton>
-                
+
                 <MenuButton
                   onClick={addImage}
                   title="Add Image"
@@ -1422,24 +1626,28 @@ const TiptapEditor = () => {
                 >
                   <ImageIcon size={16} />
                 </MenuButton>
-                
+
                 {/* Table Button with Dropdown */}
                 <div className="relative" ref={tableMenuRef}>
                   <MenuButton
                     onClick={() => setShowTableMenu(!showTableMenu)}
                     isActive={editorState.table || showTableMenu}
                     title="Table Options"
-                    className={`p-2 rounded transition-colors ${editorState.table || showTableMenu ? 'bg-blue-100 text-blue-600' : 'hover:bg-white'}`}
+                    className={`p-2 rounded transition-colors ${
+                      editorState.table || showTableMenu
+                        ? "bg-blue-100 text-blue-600"
+                        : "hover:bg-white"
+                    }`}
                   >
                     <TableIcon size={16} />
                   </MenuButton>
-                  
+
                   {showTableMenu && (
                     <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
                       <div className="p-4 border-b border-gray-100 text-sm text-gray-600 font-medium">
                         Table Options
                       </div>
-                      
+
                       {!editorState.table ? (
                         // Not in table - show insert form
                         <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto">
@@ -1453,7 +1661,9 @@ const TiptapEditor = () => {
                                 min="1"
                                 max="20"
                                 value={tableRows}
-                                onChange={(e) => setTableRows(parseInt(e.target.value) || 1)}
+                                onChange={(e) =>
+                                  setTableRows(parseInt(e.target.value) || 1)
+                                }
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               />
                             </div>
@@ -1466,51 +1676,69 @@ const TiptapEditor = () => {
                                 min="1"
                                 max="10"
                                 value={tableCols}
-                                onChange={(e) => setTableCols(parseInt(e.target.value) || 1)}
+                                onChange={(e) =>
+                                  setTableCols(parseInt(e.target.value) || 1)
+                                }
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               />
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center space-x-3">
                             <input
                               type="checkbox"
                               id="withHeader"
                               checked={tableWithHeader}
-                              onChange={(e) => setTableWithHeader(e.target.checked)}
+                              onChange={(e) =>
+                                setTableWithHeader(e.target.checked)
+                              }
                               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
-                            <label htmlFor="withHeader" className="text-sm text-gray-700">
+                            <label
+                              htmlFor="withHeader"
+                              className="text-sm text-gray-700"
+                            >
                               Include header row
                             </label>
                           </div>
-                          
+
                           <div className="bg-gray-50 p-3 rounded-lg">
-                            <div className="text-sm text-gray-600 mb-2">Preview:</div>
-                            <div className="grid gap-1" style={{
-                              gridTemplateColumns: `repeat(${tableCols}, 1fr)`,
-                              maxWidth: '140px'
-                            }}>
-                              {Array.from({ length: tableRows * tableCols }, (_, index) => {
-                                const row = Math.floor(index / tableCols);
-                                const isHeader = tableWithHeader && row === 0;
-                                return (
-                                  <div
-                                    key={index}
-                                    className={`h-5 border border-gray-300 text-xs flex items-center justify-center rounded ${
-                                      isHeader ? 'bg-gray-200 font-medium' : 'bg-white'
-                                    }`}
-                                  >
-                                    {isHeader ? 'H' : ''}
-                                  </div>
-                                );
-                              })}
+                            <div className="text-sm text-gray-600 mb-2">
+                              Preview:
+                            </div>
+                            <div
+                              className="grid gap-1"
+                              style={{
+                                gridTemplateColumns: `repeat(${tableCols}, 1fr)`,
+                                maxWidth: "140px",
+                              }}
+                            >
+                              {Array.from(
+                                { length: tableRows * tableCols },
+                                (_, index) => {
+                                  const row = Math.floor(index / tableCols);
+                                  const isHeader = tableWithHeader && row === 0;
+                                  return (
+                                    <div
+                                      key={index}
+                                      className={`h-5 border border-gray-300 text-xs flex items-center justify-center rounded ${
+                                        isHeader
+                                          ? "bg-gray-200 font-medium"
+                                          : "bg-white"
+                                      }`}
+                                    >
+                                      {isHeader ? "H" : ""}
+                                    </div>
+                                  );
+                                }
+                              )}
                             </div>
                             <div className="text-xs text-gray-500 mt-2">
-                              {tableRows} × {tableCols}{tableWithHeader ? ' (with header)' : ''}
+                              {tableRows} × {tableCols}
+                              {tableWithHeader ? " (with header)" : ""}
                             </div>
                           </div>
-                          
+
                           <button
                             onClick={insertTable}
                             className="w-full bg-blue-600 text-white text-sm py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -1521,97 +1749,109 @@ const TiptapEditor = () => {
                       ) : (
                         // In table - show table management options
 
-                            <>
-                            <div className="p-3 border-b border-gray-100">
-                                <div className="text-sm text-blue-600 font-bold mb-3">Column Actions</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={addColumnBefore}
-                                    className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
-                                >
-                                    Add Before
-                                </button>
-                                <button
-                                    onClick={addColumnAfter}
-                                    className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
-                                >
-                                    Add After
-                                </button>
-                                <button
-                                    onClick={deleteColumn}
-                                    className="text-sm px-4 py-2 bg-red-600 text-red-100 hover:text-white rounded-lg text-left col-span-2 transition-all"
-                                >
-                                    Delete Column
-                                </button>
-                                </div>
+                        <>
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="text-sm text-blue-600 font-bold mb-3">
+                              Column Actions
                             </div>
-
-                            <div className="p-3 border-b border-gray-100">
-                                <div className="text-sm text-blue-600 font-bold mb-3">Row Actions</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={addRowBefore}
-                                    className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
-                                >
-                                    Add Above
-                                </button>
-                                <button
-                                    onClick={addRowAfter}
-                                    className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
-                                >
-                                    Add Below
-                                </button>
-                                <button
-                                    onClick={deleteRow}
-                                    className="text-sm px-4 py-2 bg-red-600 text-red-100 hover:text-white rounded-lg text-left col-span-2 transition-all"
-                                >
-                                    Delete Row
-                                </button>
-                                </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={addColumnBefore}
+                                className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
+                              >
+                                Add Before
+                              </button>
+                              <button
+                                onClick={addColumnAfter}
+                                className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
+                              >
+                                Add After
+                              </button>
+                              <button
+                                onClick={deleteColumn}
+                                className="text-sm px-4 py-2 bg-red-600 text-red-100 hover:text-white rounded-lg text-left col-span-2 transition-all"
+                              >
+                                Delete Column
+                              </button>
                             </div>
+                          </div>
 
-                            <div className="p-3 border-b border-gray-100">
-                                <div className="text-sm text-blue-600 font-bold mb-3">Bulk Actions</div>
-                                <div className="space-y-2">
-                                <button
-                                    onClick={() => {
-                                    const numCols = parseInt(prompt('Number of columns to add:') || '1');
-                                    for (let i = 0; i < numCols; i++) {
-                                        editor.chain().focus().addColumnAfter().run();
-                                    }
-                                    setShowTableMenu(false);
-                                    }}
-                                    className="w-full text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
-                                >
-                                    Add Multiple Columns
-                                </button>
-                                <button
-                                    onClick={() => {
-                                    const numRows = parseInt(prompt('Number of rows to add:') || '1');
-                                    for (let i = 0; i < numRows; i++) {
-                                        editor.chain().focus().addRowAfter().run();
-                                    }
-                                    setShowTableMenu(false);
-                                    }}
-                                    className="w-full text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
-                                >
-                                    Add Multiple Rows
-                                </button>
-                                </div>
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="text-sm text-blue-600 font-bold mb-3">
+                              Row Actions
                             </div>
-
-                            <div className="p-3">
-                                <button
-                                onClick={deleteTable}
-                                className="w-full text-sm px-4 py-2.5 bg-red-600 text-red-100 hover:text-white rounded-lg text-left flex items-center gap-2 transition-all"
-                                >
-                                <Trash2 size={16} />
-                                Delete Entire Table
-                                </button>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={addRowBefore}
+                                className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
+                              >
+                                Add Above
+                              </button>
+                              <button
+                                onClick={addRowAfter}
+                                className="text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
+                              >
+                                Add Below
+                              </button>
+                              <button
+                                onClick={deleteRow}
+                                className="text-sm px-4 py-2 bg-red-600 text-red-100 hover:text-white rounded-lg text-left col-span-2 transition-all"
+                              >
+                                Delete Row
+                              </button>
                             </div>
-                            </>
+                          </div>
 
+                          <div className="p-3 border-b border-gray-100">
+                            <div className="text-sm text-blue-600 font-bold mb-3">
+                              Bulk Actions
+                            </div>
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => {
+                                  const numCols = parseInt(
+                                    prompt("Number of columns to add:") || "1"
+                                  );
+                                  for (let i = 0; i < numCols; i++) {
+                                    editor
+                                      .chain()
+                                      .focus()
+                                      .addColumnAfter()
+                                      .run();
+                                  }
+                                  setShowTableMenu(false);
+                                }}
+                                className="w-full text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
+                              >
+                                Add Multiple Columns
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const numRows = parseInt(
+                                    prompt("Number of rows to add:") || "1"
+                                  );
+                                  for (let i = 0; i < numRows; i++) {
+                                    editor.chain().focus().addRowAfter().run();
+                                  }
+                                  setShowTableMenu(false);
+                                }}
+                                className="w-full text-sm px-4 py-2 bg-green-400 hover:bg-green-600 text-black hover:text-green-100 rounded-lg text-left transition-colors"
+                              >
+                                Add Multiple Rows
+                              </button>
+                            </div>
+                          </div>
 
+                          <div className="p-3">
+                            <button
+                              onClick={deleteTable}
+                              className="w-full text-sm px-4 py-2.5 bg-red-600 text-red-100 hover:text-white rounded-lg text-left flex items-center gap-2 transition-all"
+                            >
+                              <Trash2 size={16} />
+                              Delete Entire Table
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
                   )}
@@ -1628,7 +1868,7 @@ const TiptapEditor = () => {
               >
                 <Type size={16} />
               </MenuButton>
-              
+
               <MenuButton
                 onClick={() => editor.chain().focus().setHorizontalRule().run()}
                 title="Horizontal Rule"
@@ -1644,29 +1884,26 @@ const TiptapEditor = () => {
       {/* Editor Content */}
       <div className="relative bg-white">
         <div className="h-[500px] overflow-y-auto mb-[20px]">
-          <EditorContent 
-            editor={editor} 
-            className="tiptap-editor-content"
-                  />
-                  
-          {/* Slash Command Menu */}      
-            {showSlashMenu && slashRange && (
-            <div 
-                className="fixed z-50"
-                style={{
+          <EditorContent editor={editor} className="tiptap-editor-content" />
+
+          {/* Slash Command Menu */}
+          {showSlashMenu && slashRange && (
+            <div
+              className="fixed z-50"
+              style={{
                 left: slashMenuPosition.x,
                 top: Math.max(10, slashMenuPosition.y - 290), // Keep 10px from top edge
-                bottom: slashMenuPosition.y - 200 < 10 ? 'auto' : undefined,
-                }}
+                bottom: slashMenuPosition.y - 200 < 10 ? "auto" : undefined,
+              }}
             >
-                <SlashMenu
+              <SlashMenu
                 editor={editor}
                 range={slashRange}
                 query={slashQuery}
                 onSelect={() => setShowSlashMenu(false)}
-                />
+              />
             </div>
-            )}
+          )}
         </div>
       </div>
 
@@ -1687,9 +1924,9 @@ const TiptapEditor = () => {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     confirmSaveAs();
-                  } else if (e.key === 'Escape') {
+                  } else if (e.key === "Escape") {
                     setShowSaveAsModal(false);
                   }
                 }}
@@ -1731,15 +1968,16 @@ const TiptapEditor = () => {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleCustomFontSize();
-                  } else if (e.key === 'Escape') {
+                  } else if (e.key === "Escape") {
                     setShowCustomFontSizeInput(false);
                   }
                 }}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Supported units: px, em, rem, pt, %. Numbers without units will be treated as px.
+                Supported units: px, em, rem, pt, %. Numbers without units will
+                be treated as px.
               </p>
             </div>
             <div className="flex justify-end gap-2">
@@ -1774,9 +2012,9 @@ const TiptapEditor = () => {
               className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   handleSetLink();
-                } else if (e.key === 'Escape') {
+                } else if (e.key === "Escape") {
                   setShowLinkModal(false);
                 }
               }}
@@ -1792,7 +2030,7 @@ const TiptapEditor = () => {
                 onClick={handleSetLink}
                 className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
               >
-                {linkUrl ? 'Update Link' : 'Remove Link'}
+                {linkUrl ? "Update Link" : "Remove Link"}
               </button>
             </div>
           </div>
@@ -1812,9 +2050,9 @@ const TiptapEditor = () => {
               className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   handleAddImage();
-                } else if (e.key === 'Escape') {
+                } else if (e.key === "Escape") {
                   setShowImageModal(false);
                 }
               }}
@@ -1843,9 +2081,13 @@ const TiptapEditor = () => {
         <div className="flex items-center justify-between text-sm text-gray-600">
           <div className="flex items-center gap-4">
             {/* <span>✨ Enhanced Tiptap Editor</span> */}
-            <span><div className="w-2 h-2 bg-green-500 rounded-full"></div></span>
+            <span>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </span>
             <span>{editor.storage.characterCount.characters()} characters</span>
-            <span><div className="w-2 h-2 bg-green-500 rounded-full"></div></span>
+            <span>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </span>
             <span>{editor.storage.characterCount.words()} words</span>
           </div>
           {/* <div className="flex items-center gap-2">
@@ -1862,11 +2104,11 @@ const TiptapEditor = () => {
           min-height: 100%;
           padding: 2rem;
         }
-        
+
         .tiptap-editor-content .ProseMirror:focus {
           outline: none;
         }
-        
+
         .tiptap-editor-content h1 {
           font-size: 2rem;
           font-weight: 700;
@@ -1874,7 +2116,7 @@ const TiptapEditor = () => {
           line-height: 1.2;
           color: #1f2937;
         }
-        
+
         .tiptap-editor-content h2 {
           font-size: 1.5rem;
           font-weight: 600;
@@ -1882,7 +2124,7 @@ const TiptapEditor = () => {
           line-height: 1.3;
           color: #374151;
         }
-        
+
         .tiptap-editor-content h3 {
           font-size: 1.25rem;
           font-weight: 600;
@@ -1890,34 +2132,35 @@ const TiptapEditor = () => {
           line-height: 1.4;
           color: #374151;
         }
-        
+
         .tiptap-editor-content p {
           margin: 1rem 0;
           line-height: 1.6;
           color: #374151;
         }
-        
-        .tiptap-editor-content ul, .tiptap-editor-content ol {
+
+        .tiptap-editor-content ul,
+        .tiptap-editor-content ol {
           margin: 1rem 0;
           padding-left: 2rem;
           list-style-position: outside;
         }
-        
+
         .tiptap-editor-content li {
           margin: 0.5rem 0;
           line-height: 1.6;
           display: list-item;
           list-style-type: inherit;
         }
-        
+
         .tiptap-editor-content ul li {
           list-style-type: disc;
         }
-        
+
         .tiptap-editor-content ol li {
           list-style-type: decimal;
         }
-        
+
         .tiptap-editor-content blockquote {
           margin: 1.5rem 0;
           padding: 1rem 1.5rem;
@@ -1926,42 +2169,42 @@ const TiptapEditor = () => {
           font-style: italic;
           color: #475569;
         }
-        
+
         .tiptap-editor-content pre {
           background: #1f2937;
           color: #f9fafb;
-          font-family: 'JetBrains Mono', 'Courier New', monospace;
+          font-family: "JetBrains Mono", "Courier New", monospace;
           padding: 1rem;
           border-radius: 0.5rem;
           margin: 1.5rem 0;
           overflow-x: auto;
         }
-        
+
         .tiptap-editor-content code {
           background: #f1f5f9;
           color: #dc2626;
           padding: 0.25rem 0.375rem;
           border-radius: 0.25rem;
-          font-family: 'JetBrains Mono', 'Courier New', monospace;
+          font-family: "JetBrains Mono", "Courier New", monospace;
           font-size: 0.875rem;
         }
-        
+
         .tiptap-editor-content pre code {
           background: transparent;
           color: inherit;
           padding: 0;
         }
-        
+
         .tiptap-editor-content a {
           color: #3b82f6;
           text-decoration: underline;
           text-underline-offset: 2px;
         }
-        
+
         .tiptap-editor-content a:hover {
           color: #1d4ed8;
         }
-        
+
         .tiptap-editor-content table {
           border-collapse: collapse;
           width: 100%;
@@ -1969,24 +2212,25 @@ const TiptapEditor = () => {
           border: 1px solid #d1d5db;
           table-layout: fixed;
         }
-        
-        .tiptap-editor-content th, .tiptap-editor-content td {
+
+        .tiptap-editor-content th,
+        .tiptap-editor-content td {
           border: 1px solid #d1d5db;
           padding: 0.75rem;
           text-align: left;
           vertical-align: top;
           position: relative;
         }
-        
+
         .tiptap-editor-content th {
           background: #f9fafb;
           font-weight: 600;
         }
-        
+
         .tiptap-editor-content .selectedCell {
           background: #dbeafe;
         }
-        
+
         .tiptap-editor-content .column-resize-handle {
           position: absolute;
           right: -2px;
@@ -1996,20 +2240,20 @@ const TiptapEditor = () => {
           background-color: #3b82f6;
           cursor: col-resize;
         }
-        
+
         .tiptap-editor-content hr {
           border: none;
           border-top: 2px solid #e5e7eb;
           margin: 2rem 0;
         }
-        
+
         .tiptap-editor-content img {
           max-width: 100%;
           height: auto;
           border-radius: 0.5rem;
           margin: 1rem 0;
         }
-        
+
         .tiptap-editor-content .ProseMirror-selectednode {
           outline: 2px solid #3b82f6;
           outline-offset: 2px;

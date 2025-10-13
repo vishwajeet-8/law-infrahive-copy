@@ -3,6 +3,7 @@ import { AlertTriangle, Star, X, Search } from "lucide-react";
 import DistrictCaseDetailsModal from "./DistrictCaseDetailsModal";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
+import { jwtDecode } from "jwt-decode";
 
 // Custom debounce function
 const debounce = (func, wait) => {
@@ -15,8 +16,12 @@ const debounce = (func, wait) => {
 
 const AdvocateNumberSearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
+
+  // const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // const role = user?.role || "Member";
   const isOwner = role === "Owner";
   const [advocateState, setAdvocateState] = useState("");
   const [advocateNumber, setAdvocateNumber] = useState("");
@@ -149,9 +154,11 @@ const AdvocateNumberSearchPage = ({ court }) => {
             type: caseData.type || "N/A",
             decisionDate: caseData.dateOfDecision || null,
             name: courtNameFromResponse || courtName,
-            advocateName: caseData.advocateName || courtNameFromResponse || "N/A",
+            advocateName:
+              caseData.advocateName || courtNameFromResponse || "N/A",
             filing: caseData.filing || null,
-            advocateReg: `${advocateState}/${advocateNumber}/${advocateYear}` || "N/A",
+            advocateReg:
+              `${advocateState}/${advocateNumber}/${advocateYear}` || "N/A",
           },
           court: courtName,
           workspace_id: workspaceId,
@@ -183,9 +190,11 @@ const AdvocateNumberSearchPage = ({ court }) => {
             type: caseData.type || "N/A",
             decisionDate: caseData.dateOfDecision || null,
             name: courtNameFromResponse || courtName,
-            advocateName: caseData.advocateName || courtNameFromResponse || "N/A",
+            advocateName:
+              caseData.advocateName || courtNameFromResponse || "N/A",
             filing: caseData.filing || null,
-            advocateReg: `${advocateState}/${advocateNumber}/${advocateYear}` || "N/A",
+            advocateReg:
+              `${advocateState}/${advocateNumber}/${advocateYear}` || "N/A",
           },
           court: courtName,
           workspace_id: workspaceId,
@@ -216,9 +225,11 @@ const AdvocateNumberSearchPage = ({ court }) => {
               type: caseData.type || "N/A",
               decisionDate: caseData.dateOfDecision || null,
               name: courtNameFromResponse || courtName,
-              advocateName: caseData.advocateName || courtNameFromResponse || "N/A",
+              advocateName:
+                caseData.advocateName || courtNameFromResponse || "N/A",
               filing: caseData.filing || null,
-              advocateReg: `${advocateState}/${advocateNumber}/${advocateYear}` || "N/A",
+              advocateReg:
+                `${advocateState}/${advocateNumber}/${advocateYear}` || "N/A",
             },
             court: courtName,
             workspace_id: workspaceId,
@@ -235,7 +246,9 @@ const AdvocateNumberSearchPage = ({ court }) => {
   const handleUnfollowCase = async (cnr) => {
     if (!isOwner) return;
     // Optimistic update
-    const caseToUnfollow = followedCases.find((followedCase) => followedCase.cnr === cnr);
+    const caseToUnfollow = followedCases.find(
+      (followedCase) => followedCase.cnr === cnr
+    );
     setFollowedCases((prevCases) =>
       prevCases.filter((followedCase) => followedCase.cnr !== cnr)
     );
@@ -282,7 +295,9 @@ const AdvocateNumberSearchPage = ({ court }) => {
 
     try {
       const { data } = await api.post(
-        `${import.meta.env.VITE_RESEARCH_API}/legal-infrahive/district-court/search/advocate-number/`,
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }/legal-infrahive/district-court/search/advocate-number/`,
         {
           advocate: {
             state: advocateState,
@@ -303,7 +318,7 @@ const AdvocateNumberSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
         {
@@ -375,7 +390,9 @@ const AdvocateNumberSearchPage = ({ court }) => {
 
     try {
       const { data } = await api.post(
-        `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/district-court/case/`,
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }legal-infrahive/district-court/case/`,
         { cnr },
         {
           headers: {
@@ -444,8 +461,12 @@ const AdvocateNumberSearchPage = ({ court }) => {
       key: "followed_at",
       direction: "desc",
     });
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const role = user?.role || "Member";
+
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
+
+    // const user = JSON.parse(localStorage.getItem("user") || "{}");
+    // const role = user?.role || "Member";
     const isOwner = role === "Owner";
 
     useEffect(() => {
@@ -635,7 +656,10 @@ const AdvocateNumberSearchPage = ({ court }) => {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {sortedCases.map((caseData, index) => (
-                      <tr key={caseData.cnr || index} className="hover:bg-gray-50">
+                      <tr
+                        key={caseData.cnr || index}
+                        className="hover:bg-gray-50"
+                      >
                         <td className="px-6 py-4 text-sm">
                           {caseData.case_data?.title || "N/A"}
                         </td>
@@ -883,7 +907,8 @@ const AdvocateNumberSearchPage = ({ court }) => {
                 <p className="text-xs text-red-600 font-medium">{error}</p>
                 {error.includes("403") && (
                   <p className="mt-1 text-xs text-red-500">
-                    This could be due to an expired session or authentication issue.
+                    This could be due to an expired session or authentication
+                    issue.
                   </p>
                 )}
                 <div className="mt-2">
@@ -905,9 +930,12 @@ const AdvocateNumberSearchPage = ({ court }) => {
         <div className="bg-white rounded-md shadow-sm">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <h3 className="text-md font-medium text-gray-800">Search Results</h3>
+              <h3 className="text-md font-medium text-gray-800">
+                Search Results
+              </h3>
               <p className="text-xs text-gray-600">
-                Found {Array.isArray(searchResults) ? searchResults.length : 0} cases
+                Found {Array.isArray(searchResults) ? searchResults.length : 0}{" "}
+                cases
               </p>
             </div>
             <div className="relative w-64">
@@ -943,7 +971,8 @@ const AdvocateNumberSearchPage = ({ court }) => {
                         colSpan={isOwner ? 10 : 9}
                         className="text-sm text-gray-600 text-center py-4"
                       >
-                        {!originalSearchResults || originalSearchResults.length === 0
+                        {!originalSearchResults ||
+                        originalSearchResults.length === 0
                           ? "No records found matching your search criteria."
                           : "No records match your filter criteria."}
                       </td>
@@ -1158,138 +1187,155 @@ const AdvocateNumberSearchPage = ({ court }) => {
                       </tr>
                     ))}
                   </tbody> */}
-                    
-                    <tbody className="bg-white divide-y divide-gray-200">
-  {searchResults.flatMap((result, resultIndex) =>
-    result.cases.map((caseItem, index) => (
-      <tr
-        key={`${result.name}-${caseItem.cnr}-${index}`} // Unique key using court name, cnr, and index
-        className={`${
-          (resultIndex * result.cases.length + index) % 2 === 0
-            ? "bg-white"
-            : "bg-gray-50"
-        } hover:bg-blue-50 transition-colors duration-150`}
-      >
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {result.name || courtName}
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {caseItem.cnr || "N/A"}
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {caseItem.title || "N/A"}
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {caseItem.caseNumber || "N/A"}
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {caseItem.filing?.number && caseItem.filing?.year
-            ? `${caseItem.filing.number}/${caseItem.filing.year}`
-            : "N/A"}
-        </td>
-        <td className="px-4 py-3 text-sm">
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold text-blue-800">
-            {caseItem.type || "N/A"}
-          </span>
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-          {caseItem.advocateName || result.advocateName || "N/A"}
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {`${advocateState}/${advocateNumber}/${advocateYear}` || "N/A"}
-        </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
-          {formatDate(caseItem.dateOfDecision)}
-        </td>
-        {isOwner && (
-          <td className="px-4 py-3 text-sm text-gray-900">
-            <button
-              className={`flex items-center justify-center space-x-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                isCaseFollowed(caseItem.cnr)
-                  ? "text-yellow-700 bg-yellow-100 hover:bg-yellow-200"
-                  : "text-gray-700 bg-gray-100 hover:bg-gray-200"
-              }`}
-              onClick={() =>
-                handleFollowCase(caseItem, result.name, resultIndex * result.cases.length + index)
-              }
-              disabled={followLoading === (resultIndex * result.cases.length + index)}
-              data-testid={`follow-button-${caseItem.cnr}`}
-            >
-              {followLoading === (resultIndex * result.cases.length + index) ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-              ) : (
-                <>
-                  <Star
-                    size={14}
-                    className={
-                      isCaseFollowed(caseItem.cnr)
-                        ? "text-yellow-600 fill-yellow-500"
-                        : ""
-                    }
-                  />
-                  <span>
-                    {isCaseFollowed(caseItem.cnr) ? "Following" : "Follow"}
-                  </span>
-                </>
-              )}
-            </button>
-          </td>
-        )}
-        <td className="px-4 py-3 text-sm text-gray-900">
-          <button
-            onClick={() => handleViewDetails(caseItem.cnr)}
-            disabled={detailsLoading && selectedCnr === caseItem.cnr}
-            className="flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150"
-          >
-            {detailsLoading && selectedCnr === caseItem.cnr ? (
-              <span className="flex items-center space-x-1">
-                <svg
-                  className="animate-spin h-3 w-3 mr-1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Loading...
-              </span>
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3 w-3 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Details
-              </>
-            )}
-          </button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
+
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {searchResults.flatMap((result, resultIndex) =>
+                      result.cases.map((caseItem, index) => (
+                        <tr
+                          key={`${result.name}-${caseItem.cnr}-${index}`} // Unique key using court name, cnr, and index
+                          className={`${
+                            (resultIndex * result.cases.length + index) % 2 ===
+                            0
+                              ? "bg-white"
+                              : "bg-gray-50"
+                          } hover:bg-blue-50 transition-colors duration-150`}
+                        >
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {result.name || courtName}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {caseItem.cnr || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {caseItem.title || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {caseItem.caseNumber || "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {caseItem.filing?.number && caseItem.filing?.year
+                              ? `${caseItem.filing.number}/${caseItem.filing.year}`
+                              : "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold text-blue-800">
+                              {caseItem.type || "N/A"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                            {caseItem.advocateName ||
+                              result.advocateName ||
+                              "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {`${advocateState}/${advocateNumber}/${advocateYear}` ||
+                              "N/A"}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {formatDate(caseItem.dateOfDecision)}
+                          </td>
+                          {isOwner && (
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              <button
+                                className={`flex items-center justify-center space-x-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                  isCaseFollowed(caseItem.cnr)
+                                    ? "text-yellow-700 bg-yellow-100 hover:bg-yellow-200"
+                                    : "text-gray-700 bg-gray-100 hover:bg-gray-200"
+                                }`}
+                                onClick={() =>
+                                  handleFollowCase(
+                                    caseItem,
+                                    result.name,
+                                    resultIndex * result.cases.length + index
+                                  )
+                                }
+                                disabled={
+                                  followLoading ===
+                                  resultIndex * result.cases.length + index
+                                }
+                                data-testid={`follow-button-${caseItem.cnr}`}
+                              >
+                                {followLoading ===
+                                resultIndex * result.cases.length + index ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                ) : (
+                                  <>
+                                    <Star
+                                      size={14}
+                                      className={
+                                        isCaseFollowed(caseItem.cnr)
+                                          ? "text-yellow-600 fill-yellow-500"
+                                          : ""
+                                      }
+                                    />
+                                    <span>
+                                      {isCaseFollowed(caseItem.cnr)
+                                        ? "Following"
+                                        : "Follow"}
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            </td>
+                          )}
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            <button
+                              onClick={() => handleViewDetails(caseItem.cnr)}
+                              disabled={
+                                detailsLoading && selectedCnr === caseItem.cnr
+                              }
+                              className="flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150"
+                            >
+                              {detailsLoading &&
+                              selectedCnr === caseItem.cnr ? (
+                                <span className="flex items-center space-x-1">
+                                  <svg
+                                    className="animate-spin h-3 w-3 mr-1"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Loading...
+                                </span>
+                              ) : (
+                                <>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-3 w-3 mr-1"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  Details
+                                </>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
                 </table>
               </div>
             )}

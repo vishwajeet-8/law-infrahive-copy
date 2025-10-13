@@ -17,6 +17,7 @@ import api from "@/utils/api";
 import { useParams } from "react-router-dom";
 import { hcBench } from "../utils/hcBench";
 import jsPDF from "jspdf";
+import { jwtDecode } from "jwt-decode";
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -51,9 +52,12 @@ const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
     direction: "desc",
   });
   const [toast, setToast] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const workspaceId = user?.workspace_id || 4; // Default workspace_id
-  const role = user?.role || "Member";
+  // const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // const workspaceId = user?.workspace_id || 4; // Default workspace_id
+  // const role = user?.role || "Member";
+
+  const token = localStorage.getItem("token");
+  const { sub, role, email, workspaceId } = jwtDecode(token);
   const isOwner = role === "Owner";
 
   const showToast = useCallback((message) => {
@@ -293,9 +297,12 @@ const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
 
 const AdvocateSearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // const token = localStorage.getItem("token");
+  // const role = user?.role || "Member";
+
   const token = localStorage.getItem("token");
-  const role = user?.role || "Member";
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
 
   // State management
@@ -403,7 +410,7 @@ const AdvocateSearchPage = ({ court }) => {
 
   // Fetch followed cases
   const fetchFollowedCases = useCallback(async () => {
-    if (!token || !user.id) {
+    if (!token || !sub) {
       showToast("Authentication required to fetch followed cases");
       return;
     }
@@ -423,7 +430,7 @@ const AdvocateSearchPage = ({ court }) => {
       setFollowedCases([]);
       showToast("Error fetching followed cases");
     }
-  }, [courtName, workspaceId, showToast, token, user.id]);
+  }, [courtName, workspaceId, showToast, token, sub]);
 
   // Handle click outside for bench dropdown
   useEffect(() => {
@@ -494,7 +501,7 @@ const AdvocateSearchPage = ({ court }) => {
       showToast("Only owners can follow cases");
       return;
     }
-    if (!token || !user.id) {
+    if (!token || !sub) {
       showToast("Authentication required to follow cases");
       return;
     }
@@ -586,7 +593,7 @@ const AdvocateSearchPage = ({ court }) => {
       showToast("Only owners can unfollow cases");
       return;
     }
-    if (!token || !user.id) {
+    if (!token || !sub) {
       showToast("Authentication required to unfollow cases");
       return;
     }
@@ -663,7 +670,7 @@ const AdvocateSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: user.id,
+          userId: sub,
           usage: data?.length || 1,
         },
         {
@@ -706,7 +713,7 @@ const AdvocateSearchPage = ({ court }) => {
 
   // Handle view case details
   const handleViewDetails = async (result) => {
-    if (!token || !user.id) {
+    if (!token || !sub) {
       showToast("Authentication required to view case details");
       return;
     }
@@ -741,7 +748,7 @@ const AdvocateSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: user.id,
+          userId: sub,
           usage: data?.length || 1,
         },
         {

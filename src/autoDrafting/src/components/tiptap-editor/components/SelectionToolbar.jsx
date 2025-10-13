@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Copy, Replace, Loader2, Edit3, Send } from "lucide-react";
 import api from "@/utils/api";
+import { jwtDecode } from "jwt-decode";
 
 const SelectionToolbar = ({ editor, onRefine }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -126,6 +127,8 @@ const SelectionToolbar = ({ editor, onRefine }) => {
 
   // Handle streaming response with real-time updates
   const handleStreamingResponse = async (response) => {
+    const token = localStorage.getItem("token");
+    const { sub } = jwtDecode(token);
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let content = "";
@@ -157,7 +160,7 @@ const SelectionToolbar = ({ editor, onRefine }) => {
               await api.post(
                 "/extraction-credit",
                 {
-                  userId: JSON.parse(localStorage.getItem("user")).id,
+                  userId: sub,
                   usage: usage.output_tokens,
                   type: "Drafting Editor",
                 },

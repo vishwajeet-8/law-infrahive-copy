@@ -11,6 +11,7 @@ import api from "@/utils/api";
 import { useParams } from "react-router-dom";
 import { hcBench } from "../utils/hcBench";
 import jsPDF from "jspdf";
+import { jwtDecode } from "jwt-decode";
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -223,8 +224,8 @@ const HighCourtSearchPage = ({
   handlePartySearch,
 }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member"; // Default to "Member" if role is undefined
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner"; // Explicit boolean for owner check
   const [stage, setStage] = useState("Both");
   const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -358,6 +359,8 @@ const HighCourtSearchPage = ({
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const response = await api.post(
@@ -384,7 +387,7 @@ const HighCourtSearchPage = ({
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {
@@ -463,6 +466,8 @@ const HighCourtSearchPage = ({
     setDetailsError(null);
     setActiveTab("overview");
     console.log(result);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const nationalCourtCode = result.cino?.substring(0, 6);
@@ -491,7 +496,7 @@ const HighCourtSearchPage = ({
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {

@@ -18,6 +18,7 @@ import api from "@/utils/api";
 import { useParams } from "react-router-dom";
 import DOMPurify from "dompurify"; // For sanitizing HTML
 import "./DistrictPartySearchPage.css"; // Import CSS for styling
+import { jwtDecode } from "jwt-decode";
 
 // Cart Component (unchanged)
 const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
@@ -26,8 +27,8 @@ const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
     key: "followed_at",
     direction: "desc",
   });
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
 
   useEffect(() => {
@@ -358,8 +359,8 @@ const SearchableDropdown = ({
 
 const DistrictPartySearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [name, setName] = useState("");
   const [stage, setStage] = useState("");
@@ -589,6 +590,8 @@ const DistrictPartySearchPage = ({ court }) => {
     setTableSearchQuery("");
     setSearchResults(null);
     setHtmlContent(""); // Reset HTML content
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const response = await api.post(
@@ -633,7 +636,7 @@ const DistrictPartySearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
         {
@@ -661,7 +664,8 @@ const DistrictPartySearchPage = ({ court }) => {
     setDetailsLoading(true);
     setDetailsError(null);
     setSelectedCnr(cnr);
-
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
     try {
       const response = await api.post(
         `${import.meta.env.VITE_RESEARCH_API}dccd/case-details`,
@@ -684,7 +688,7 @@ const DistrictPartySearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {

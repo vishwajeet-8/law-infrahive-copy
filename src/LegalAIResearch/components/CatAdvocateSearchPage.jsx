@@ -1117,11 +1117,6 @@
 
 // export default CatAdvocateSearchPage;
 
-
-
-
-
-
 // import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 // import { AlertTriangle, Search, Star, X } from "lucide-react";
 // import { useParams } from "react-router-dom";
@@ -2372,15 +2367,19 @@
 
 // export default CatAdvocateSearchPage;
 
-
-
-
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { AlertTriangle, Search, Star, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import CatCaseDetailsModal from "./CatCaseDetailsModal";
 import { catBenches } from "../utils/catBenches";
+import { jwtDecode } from "jwt-decode";
 
 // Custom debounce function
 const debounce = (func, wait) => {
@@ -2417,8 +2416,9 @@ const formatDate = (dateString) => {
 
 const CatAdvocateSearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  // const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [name, setName] = useState("");
   const [type, setType] = useState("");
@@ -2484,7 +2484,10 @@ const CatAdvocateSearchPage = ({ court }) => {
   // Handle click outside to close bench dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (benchInputRef.current && !benchInputRef.current.contains(event.target)) {
+      if (
+        benchInputRef.current &&
+        !benchInputRef.current.contains(event.target)
+      ) {
         setShowBenchDropdown(false);
       }
     };
@@ -2507,8 +2510,8 @@ const CatAdvocateSearchPage = ({ court }) => {
   }, []);
 
   const extractDiaryInfo = useCallback((diaryNumber) => {
-    if (diaryNumber && diaryNumber.includes('/')) {
-      const parts = diaryNumber.split('/');
+    if (diaryNumber && diaryNumber.includes("/")) {
+      const parts = diaryNumber.split("/");
       return {
         diaryNum: parts[0].trim(),
         year: parts[1].trim(),
@@ -2544,8 +2547,16 @@ const CatAdvocateSearchPage = ({ court }) => {
     const { diaryNum, year } = extractDiaryInfo(caseData.diaryNumber);
     const finalYear = caseData.caseYear || year;
     const finalBenchId = caseData.benchId || benchId;
-    const caseIdentifier = createCaseIdentifier(diaryNum, finalYear, finalBenchId);
-    const isFollowed = isCaseFollowed(caseData.diaryNumber, finalYear, finalBenchId);
+    const caseIdentifier = createCaseIdentifier(
+      diaryNum,
+      finalYear,
+      finalBenchId
+    );
+    const isFollowed = isCaseFollowed(
+      caseData.diaryNumber,
+      finalYear,
+      finalBenchId
+    );
 
     // Optimistic update
     if (!isFollowed) {
@@ -2695,7 +2706,9 @@ const CatAdvocateSearchPage = ({ court }) => {
         throw new Error(data.error || "Failed to unfollow case");
       }
       await fetchFollowedCases();
-      showToast(`Case ${followedCase.diary_number}/${followedCase.case_year} unfollowed successfully`);
+      showToast(
+        `Case ${followedCase.diary_number}/${followedCase.case_year} unfollowed successfully`
+      );
     } catch (err) {
       // Revert optimistic update
       setFollowedCases((prevCases) => [...prevCases, followedCase]);
@@ -2752,44 +2765,87 @@ const CatAdvocateSearchPage = ({ court }) => {
   // };
 
   const handleViewDetails = async (caseItem) => {
-  setDetailsLoading(true);
-  setDetailsError(null);
-  setSelectedCase(caseItem);
-  const { diaryNum, year } = extractDiaryInfo(caseItem.diaryNumber);
-  const finalYear = caseItem.caseYear || year;
-  const finalBenchId = caseItem.benchId || benchId;
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
+    setDetailsLoading(true);
+    setDetailsError(null);
+    setSelectedCase(caseItem);
+    const { diaryNum, year } = extractDiaryInfo(caseItem.diaryNumber);
+    const finalYear = caseItem.caseYear || year;
+    const finalBenchId = caseItem.benchId || benchId;
 
-  try {
-    const { data } = await api.post(
-      `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/central-administrative-tribunal/diary-number/`,
-      {
-        benchId: finalBenchId,
-        diaryNumber: diaryNum,
-        caseYear: finalYear,
-      },
-      {
-        headers: {
-          Authorization: import.meta.env.VITE_RESEARCH_AUTHORIZATION_KEY,
+    try {
+      const { data } = await api.post(
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }legal-infrahive/central-administrative-tribunal/diary-number/`,
+        {
+          benchId: finalBenchId,
+          diaryNumber: diaryNum,
+          caseYear: finalYear,
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: import.meta.env.VITE_RESEARCH_AUTHORIZATION_KEY,
+          },
+        }
+      );
 
-    const resultsArray = Array.isArray(data) ? data : [];
-    await api.post(
-      "/research-credit",
-      {
-        userId: JSON.parse(localStorage.getItem("user")).id,
-        usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      const resultsArray = Array.isArray(data) ? data : [];
+      await api.post(
+        "/research-credit",
+        {
+          userId: sub,
+          usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-    // Check for specific error response
-    if (data?.error === "Failed to retrieve data: 500") {
+      // Check for specific error response
+      if (data?.error === "Failed to retrieve data: 500") {
+        setCaseDetails({
+          cnr: "N/A",
+          title: "N/A",
+          filing: {
+            number: "N/A",
+            type: "N/A",
+            date: "N/A",
+          },
+          status: {
+            stage: "N/A",
+            natureOfDisposal: "N/A",
+            dateOfDisposal: "N/A",
+          },
+          petitioner: {
+            names: ["N/A"],
+            address: "N/A",
+            advocates: ["N/A"],
+          },
+          respondents: {
+            names: ["N/A"],
+            address: "N/A",
+            advocates: ["N/A"],
+          },
+          caseProceedings: [],
+          orders: [],
+          finalOrders: [],
+          documentFiling: [],
+        });
+        setDetailsError("Failed to retrieve case details");
+        setShowCaseDetails(true);
+      } else if (data?.error) {
+        throw new Error(data.error);
+      } else {
+        setCaseDetails(data);
+        setShowCaseDetails(true);
+      }
+    } catch (err) {
+      console.error("Details fetch error:", err);
+      setDetailsError(err.message || "Failed to fetch case details");
       setCaseDetails({
         cnr: "N/A",
         title: "N/A",
@@ -2818,51 +2874,12 @@ const CatAdvocateSearchPage = ({ court }) => {
         finalOrders: [],
         documentFiling: [],
       });
-      setDetailsError("Failed to retrieve case details");
       setShowCaseDetails(true);
-    } else if (data?.error) {
-      throw new Error(data.error);
-    } else {
-      setCaseDetails(data);
-      setShowCaseDetails(true);
+    } finally {
+      setDetailsLoading(false);
     }
-  } catch (err) {
-    console.error("Details fetch error:", err);
-    setDetailsError(err.message || "Failed to fetch case details");
-    setCaseDetails({
-      cnr: "N/A",
-      title: "N/A",
-      filing: {
-        number: "N/A",
-        type: "N/A",
-        date: "N/A",
-      },
-      status: {
-        stage: "N/A",
-        natureOfDisposal: "N/A",
-        dateOfDisposal: "N/A",
-      },
-      petitioner: {
-        names: ["N/A"],
-        address: "N/A",
-        advocates: ["N/A"],
-      },
-      respondents: {
-        names: ["N/A"],
-        address: "N/A",
-        advocates: ["N/A"],
-      },
-      caseProceedings: [],
-      orders: [],
-      finalOrders: [],
-      documentFiling: [],
-    });
-    setShowCaseDetails(true);
-  } finally {
-    setDetailsLoading(false);
-  }
-};
-  
+  };
+
   const handleRetryDetails = () => {
     if (selectedCase) {
       handleViewDetails(selectedCase);
@@ -2891,7 +2908,9 @@ const CatAdvocateSearchPage = ({ court }) => {
 
     try {
       const { data } = await api.post(
-        `${import.meta.env.VITE_RESEARCH_API}legal-infrahive/central-administrative-tribunal/search-advocate-name/`,
+        `${
+          import.meta.env.VITE_RESEARCH_API
+        }legal-infrahive/central-administrative-tribunal/search-advocate-name/`,
         { name, type, benchId },
         {
           headers: {
@@ -2991,8 +3010,8 @@ const CatAdvocateSearchPage = ({ court }) => {
       key: "followed_at",
       direction: "desc",
     });
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const role = user?.role || "Member";
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
     const isOwner = role === "Owner";
 
     useEffect(() => {
@@ -3194,10 +3213,14 @@ const CatAdvocateSearchPage = ({ court }) => {
                             {caseData.case_data?.type || "N/A"}
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {caseData.case_data?.benchId || caseData.bench_id || "N/A"}
+                            {caseData.case_data?.benchId ||
+                              caseData.bench_id ||
+                              "N/A"}
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {new Date(caseData.followed_at).toLocaleDateString()}
+                            {new Date(
+                              caseData.followed_at
+                            ).toLocaleDateString()}
                           </td>
                           {isOwner && (
                             <td className="px-6 py-4 text-sm">
@@ -3286,7 +3309,9 @@ const CatAdvocateSearchPage = ({ court }) => {
                   <option value="RESPONDENT">RESPONDENT</option>
                   <option value="BOTH">BOTH</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">Example: PETITIONER</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Example: PETITIONER
+                </p>
               </div>
               <div ref={benchInputRef}>
                 <label
@@ -3388,7 +3413,8 @@ const CatAdvocateSearchPage = ({ court }) => {
                 <p className="text-xs text-red-600 font-medium">{error}</p>
                 {error.includes("403") && (
                   <p className="mt-1 text-xs text-red-500">
-                    This could be due to an expired session or authentication issue.
+                    This could be due to an expired session or authentication
+                    issue.
                   </p>
                 )}
                 <div className="mt-2">
@@ -3410,9 +3436,12 @@ const CatAdvocateSearchPage = ({ court }) => {
         <div className="bg-white rounded-md shadow-sm">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <h3 className="text-md font-medium text-gray-800">Search Results</h3>
+              <h3 className="text-md font-medium text-gray-800">
+                Search Results
+              </h3>
               <p className="text-xs text-gray-600">
-                Found {Array.isArray(searchResults) ? searchResults.length : 0} cases
+                Found {Array.isArray(searchResults) ? searchResults.length : 0}{" "}
+                cases
               </p>
             </div>
             <div className="relative w-64">
@@ -3448,7 +3477,8 @@ const CatAdvocateSearchPage = ({ court }) => {
                         colSpan={isOwner ? 9 : 8}
                         className="text-sm text-gray-600 text-center py-4"
                       >
-                        {!originalSearchResults || originalSearchResults.length === 0
+                        {!originalSearchResults ||
+                        originalSearchResults.length === 0
                           ? "No records found matching your search criteria."
                           : "No records match your filter criteria."}
                       </td>
@@ -3528,11 +3558,21 @@ const CatAdvocateSearchPage = ({ court }) => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {searchResults.map((caseItem, index) => {
-                      const { diaryNum, year } = extractDiaryInfo(caseItem.diaryNumber);
+                      const { diaryNum, year } = extractDiaryInfo(
+                        caseItem.diaryNumber
+                      );
                       const finalYear = caseItem.caseYear || year;
                       const finalBenchId = caseItem.benchId || benchId;
-                      const isFollowed = isCaseFollowed(caseItem.diaryNumber, finalYear, finalBenchId);
-                      const caseIdentifier = createCaseIdentifier(diaryNum, finalYear, finalBenchId);
+                      const isFollowed = isCaseFollowed(
+                        caseItem.diaryNumber,
+                        finalYear,
+                        finalBenchId
+                      );
+                      const caseIdentifier = createCaseIdentifier(
+                        diaryNum,
+                        finalYear,
+                        finalBenchId
+                      );
 
                       return (
                         <tr
@@ -3573,7 +3613,9 @@ const CatAdvocateSearchPage = ({ court }) => {
                                     ? "text-yellow-700 bg-yellow-100 hover:bg-yellow-200"
                                     : "text-gray-700 bg-gray-100 hover:bg-gray-200"
                                 }`}
-                                onClick={() => handleFollowCase(caseItem, index)}
+                                onClick={() =>
+                                  handleFollowCase(caseItem, index)
+                                }
                                 disabled={followLoading === index}
                                 data-testid={`follow-button-${caseIdentifier}`}
                               >
@@ -3601,10 +3643,22 @@ const CatAdvocateSearchPage = ({ court }) => {
                             <button
                               onClick={() => handleViewDetails(caseItem)}
                               className="px-4 w-24 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm transition-colors flex items-center justify-center"
-                              disabled={detailsLoading && selectedCase?.diaryNumber === caseItem.diaryNumber}
-                              aria-label={detailsLoading && selectedCase?.diaryNumber === caseItem.diaryNumber ? "Loading case details" : "View case details"}
+                              disabled={
+                                detailsLoading &&
+                                selectedCase?.diaryNumber ===
+                                  caseItem.diaryNumber
+                              }
+                              aria-label={
+                                detailsLoading &&
+                                selectedCase?.diaryNumber ===
+                                  caseItem.diaryNumber
+                                  ? "Loading case details"
+                                  : "View case details"
+                              }
                             >
-                              {detailsLoading && selectedCase?.diaryNumber === caseItem.diaryNumber ? (
+                              {detailsLoading &&
+                              selectedCase?.diaryNumber ===
+                                caseItem.diaryNumber ? (
                                 <span className="flex items-center">
                                   <svg
                                     className="animate-spin -ml-1 mr-2 h-3 w-3 text-blue-800"

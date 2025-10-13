@@ -253,7 +253,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          <CreditAudit creditData={data}/>
+          <CreditAudit creditData={data} />
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center p-6 bg-gray-50 rounded-xl">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">

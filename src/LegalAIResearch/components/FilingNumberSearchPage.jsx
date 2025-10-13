@@ -11,6 +11,7 @@ import { useParams } from "react-router-dom";
 import api from "@/utils/api";
 import { hcBench } from "../utils/hcBench";
 import jsPDF from "jspdf";
+import { jwtDecode } from "jwt-decode";
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -33,9 +34,8 @@ const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
     direction: "desc",
   });
   const [toast, setToast] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const workspaceId = user?.workspace_id || 4; // Default workspace_id
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email, workspaceId } = jwtDecode(token);
   const isOwner = role === "Owner";
 
   const showToast = useCallback((message) => {
@@ -273,8 +273,8 @@ const Cart = ({ followedCases, onUnfollow, onClose, fetchFollowedCases }) => {
 // Main Component
 const FilingNumberSearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [filingNumberInput, setFilingNumberInput] = useState("");
   const [filingYear, setFilingYear] = useState(
@@ -518,6 +518,8 @@ const FilingNumberSearchPage = ({ court }) => {
     setHasResponse(false);
     setSearchError(null);
     setResults([]);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const response = await api.post(
@@ -542,7 +544,7 @@ const FilingNumberSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {
@@ -582,6 +584,8 @@ const FilingNumberSearchPage = ({ court }) => {
     setShowModal(true);
     setDetailsError(null);
     setActiveTab("overview");
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const nationalCourtCode = result.cino?.substring(0, 6);
@@ -605,7 +609,7 @@ const FilingNumberSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {

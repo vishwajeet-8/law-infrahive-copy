@@ -3,6 +3,7 @@ import { AlertTriangle, Star, X, Search } from "lucide-react";
 import DistrictCaseDetailsModal from "./DistrictCaseDetailsModal";
 import { useParams } from "react-router-dom";
 import api from "@/utils/api";
+import { jwtDecode } from "jwt-decode";
 
 // Custom debounce function
 const debounce = (func, wait) => {
@@ -15,8 +16,8 @@ const debounce = (func, wait) => {
 
 const DistrictAdvocateSearchPage = ({ court }) => {
   const { workspaceId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user?.role || "Member";
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
   const isOwner = role === "Owner";
   const [name, setName] = useState("");
   const [stage, setStage] = useState("");
@@ -227,6 +228,8 @@ const DistrictAdvocateSearchPage = ({ court }) => {
       setError("Please enter an advocate name");
       return;
     }
+    const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
 
     setIsLoading(true);
     setError(null);
@@ -268,7 +271,7 @@ const DistrictAdvocateSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: resultsArray?.length === 0 ? 1 : resultsArray?.length,
         },
         {
@@ -355,7 +358,7 @@ const DistrictAdvocateSearchPage = ({ court }) => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {
@@ -421,8 +424,8 @@ const DistrictAdvocateSearchPage = ({ court }) => {
       key: "followed_at",
       direction: "desc",
     });
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const role = user?.role || "Member";
+    const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
     const isOwner = role === "Owner";
 
     useEffect(() => {

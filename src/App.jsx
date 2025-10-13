@@ -31,6 +31,8 @@ import Profile from "./components/userSettings/Profile";
 import Workspace from "./workspaces/Workspace";
 import TiptapEditor from "./autoDrafting/src/components/tiptap-editor";
 import ExtractedData from "./extract/pages/ExtractedData";
+import LegalAIResearchAgent from "./components/LegalAIResearchAgent";
+import { jwtDecode } from "jwt-decode";
 
 // Assume you have a way to check if the user is authenticated
 // Replace this with your actual authentication logic (e.g., context, Redux, or localStorage)
@@ -42,8 +44,9 @@ const isAuthenticated = () => {
 // Assume you have a way to get the default workspaceId
 const getDefaultWorkspaceId = () => {
   // Replace with your logic to get the workspaceId (e.g., from localStorage, context, or API)
-  const user = localStorage.getItem("user"); // Fallback to "default" if not found
-  const { workspaceId } = JSON.parse(user);
+  // const user = localStorage.getItem("user"); // Fallback to "default" if not found
+  const token = localStorage.getItem("token");
+  const { workspaceId } = jwtDecode(token)
   console.log(workspaceId);
   return workspaceId;
 };
@@ -100,6 +103,7 @@ const App = () => {
           <Route path="oneclechat" element={<OnecleChat />} />
           <Route path="newshub" element={<News />} />
           <Route path="legal-ai-research" element={<LegalAiResearch />} />
+          <Route path="ai-research-agent" element={<LegalAIResearchAgent />} />
           <Route path="integration/rbi-chat" element={<RbiChat />} />
           <Route
             path="legal-document-intelligence/:sessionId"

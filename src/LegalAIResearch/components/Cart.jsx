@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
@@ -26,6 +25,7 @@ import "jspdf-autotable";
 import { Download } from "lucide-react";
 import CatCaseDetailsModal from "./CatCaseDetailsModal";
 import ConsumerForumCaseDetailsModal from "./ConsumerForumCaseDetailsModal";
+import { jwtDecode } from "jwt-decode";
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -54,7 +54,6 @@ const ErrorMessage = ({ message }) => (
 const CartPage = () => {
   const navigate = useNavigate();
   const { workspaceId } = useParams();
-  const { role } = JSON.parse(localStorage.getItem("user"));
 
   // State for tab selection
   const [activeCourtTab, setActiveCourtTab] = useState("supreme");
@@ -127,40 +126,40 @@ const CartPage = () => {
   const [cronFetchError, setCronFetchError] = useState(null);
 
   // State for workspace users and email selection
-const [workspaceUsers, setWorkspaceUsers] = useState([]);
-const [selectedEmails, setSelectedEmails] = useState([]);
-const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-const [usersError, setUsersError] = useState(null);
-const [showEmailDropdown, setShowEmailDropdown] = useState(false);
+  const [workspaceUsers, setWorkspaceUsers] = useState([]);
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState(null);
+  const [showEmailDropdown, setShowEmailDropdown] = useState(false);
+  const token = localStorage.getItem("token");
+  const { sub, role, email } = jwtDecode(token);
 
-
-  
   const fetchCronSchedule = useCallback(async () => {
     try {
       setIsLoadingCron(true);
       setCronFetchError(null); // Clear any previous errors
-      
+
       const response = await api.get("/get-cron-interval", {
         params: { workspace_id: workspaceId, role },
       });
-      
+
       console.log("Cron fetch response:", response.data); // Debug log
-      
+
       const data = response.data;
-      
+
       // Check if the response is successful and has the expected data
       if (data && (data.success === true || data.days !== undefined)) {
         // Handle both response formats
         const days = data.days || 0;
         const hours = data.hours || 0;
         const minutes = data.minutes || 0;
-        
+
         setCronSchedule({
           days: days,
           hours: hours,
           minutes: minutes,
         });
-        
+
         // Only update form fields if there's an actual schedule
         if (days > 0 || hours > 0 || minutes > 0) {
           setCronDays(days.toString());
@@ -172,7 +171,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           setCronHours("");
           setCronMinutes("");
         }
-        
+
         console.log("Cron schedule updated:", { days, hours, minutes }); // Debug log
       } else {
         // Handle case where no schedule exists
@@ -190,14 +189,13 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
       setIsLoadingCron(false);
     }
   }, [workspaceId, role]);
-  
+
   // Fetch current cron schedule
   useEffect(() => {
     if (role === "Owner") {
       fetchCronSchedule();
     }
   }, [role, fetchCronSchedule]); // Add fetchCronSchedule to dependencies
-
 
   // Existing useEffect hooks for fetching cases remain unchanged
   useEffect(() => {
@@ -818,11 +816,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
     }
   };
 
-
   // Function to stop the cron job
-  
-  
-  
 
   const handleStopCron = async () => {
     if (
@@ -837,7 +831,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
         if (data.success) {
           // Refetch the cron schedule to confirm it was stopped
           await fetchCronSchedule();
-          
+
           setCronSuccess("Scheduled updates stopped successfully.");
           setTimeout(() => {
             setCronSuccess(null);
@@ -853,7 +847,6 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
     }
   };
 
-
   // Function to fetch case details
 
   const handleViewDetails = async (
@@ -866,6 +859,8 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
     setDetailsError(null);
     setActiveTab("overview");
     setCaseDetails(null);
+    const token = localStorage.getItem("token");
+    const { sub, role, email, workspaceId } = jwtDecode(token);
 
     try {
       if (
@@ -901,7 +896,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           await api.post(
             "/research-credit",
             {
-              userId: JSON.parse(localStorage.getItem("user")).id,
+              userId: sub,
             },
             {
               headers: {
@@ -933,7 +928,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           await api.post(
             "/research-credit",
             {
-              userId: JSON.parse(localStorage.getItem("user")).id,
+              userId: sub,
             },
             {
               headers: {
@@ -965,7 +960,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           await api.post(
             "/research-credit",
             {
-              userId: JSON.parse(localStorage.getItem("user")).id,
+              userId: sub,
             },
             {
               headers: {
@@ -1013,7 +1008,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           await api.post(
             "/research-credit",
             {
-              userId: JSON.parse(localStorage.getItem("user")).id,
+              userId: sub,
             },
             {
               headers: {
@@ -1048,7 +1043,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           await api.post(
             "/research-credit",
             {
-              userId: JSON.parse(localStorage.getItem("user")).id,
+              userId: sub,
             },
             {
               headers: {
@@ -1084,7 +1079,7 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
           await api.post(
             "/research-credit",
             {
-              userId: JSON.parse(localStorage.getItem("user")).id,
+              userId: sub,
             },
             {
               headers: {
@@ -1154,157 +1149,165 @@ const [showEmailDropdown, setShowEmailDropdown] = useState(false);
     }
   };
 
-
   // Add this useEffect to fetch workspace users
-useEffect(() => {
-  if (role === "Owner" && workspaceId) {
-    fetchWorkspaceUsers();
-  }
-}, [workspaceId, role]);
-
-// Function to fetch workspace users
-const fetchWorkspaceUsers = async () => {
-  try {
-    setIsLoadingUsers(true);
-    setUsersError(null);
-    
-    const response = await fetch(`https://apilegalnod.infrahive.ai/legal-api/all-invites?workspaceId=${workspaceId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  useEffect(() => {
+    if (role === "Owner" && workspaceId) {
+      fetchWorkspaceUsers();
     }
-    
-    const data = await response.json();
-    
-    // Filter only accepted members and add current user (owner)
-    const acceptedMembers = data.filter(invite => invite.status === "Accepted");
-    
-    // Get current user info from localStorage
-    const currentUser = JSON.parse(localStorage.getItem("user"));
-    
-    // Create users array with accepted members + current user
-    const users = [
-      // Add current user (owner) first
-      {
-        id: currentUser.id,
-        email: currentUser.email,
-        role: currentUser.role,
-        name: currentUser.name || currentUser.email.split('@')[0], // Use name or email prefix
-        status: "Owner"
-      },
-      // Add accepted workspace members
-      ...acceptedMembers.map(member => ({
-        id: member.id,
-        email: member.email,
-        role: member.role,
-        name: member.email.split('@')[0], // Use email prefix as name since API doesn't provide name
-        status: member.status
-      }))
-    ];
-    
-    setWorkspaceUsers(users);
-    // Pre-select all users by default
-    setSelectedEmails(users.map(user => user.email));
-    
-  } catch (err) {
-    setUsersError(err.message);
-    console.error("Error fetching workspace users:", err);
-  } finally {
-    setIsLoadingUsers(false);
-  }
-};
+  }, [workspaceId, role]);
 
-// Function to handle email selection
-const handleEmailSelection = (email) => {
-  setSelectedEmails(prev => {
-    if (prev.includes(email)) {
-      return prev.filter(e => e !== email);
+  // Function to fetch workspace users
+  const fetchWorkspaceUsers = async () => {
+    try {
+      setIsLoadingUsers(true);
+      setUsersError(null);
+
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_NODE_SERVER
+        }/all-invites?workspaceId=${workspaceId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Filter only accepted members and add current user (owner)
+      const acceptedMembers = data.filter(
+        (invite) => invite.status === "Accepted"
+      );
+
+      // Get current user info from localStorage
+      // const token = localStorage.getItem("token");
+      // const { sub, role, email, workspaceId } = jwtDecode(token);
+      // const currentUser = JSON.parse(localStorage.getItem("user"));
+
+      // Create users array with accepted members + current user
+      const users = [
+        // Add current user (owner) first
+        {
+          id: sub,
+          email: email,
+          role: role,
+          name: email.split("@")[0], // Use name or email prefix
+          status: "Owner",
+        },
+        // Add accepted workspace members
+        ...acceptedMembers.map((member) => ({
+          id: member.id,
+          email: member.email,
+          role: member.role,
+          name: member.email.split("@")[0], // Use email prefix as name since API doesn't provide name
+          status: member.status,
+        })),
+      ];
+
+      setWorkspaceUsers(users);
+      // Pre-select all users by default
+      setSelectedEmails(users.map((user) => user.email));
+    } catch (err) {
+      setUsersError(err.message);
+      console.error("Error fetching workspace users:", err);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  // Function to handle email selection
+  const handleEmailSelection = (email) => {
+    setSelectedEmails((prev) => {
+      if (prev.includes(email)) {
+        return prev.filter((e) => e !== email);
+      } else {
+        return [...prev, email];
+      }
+    });
+  };
+
+  // Function to select/deselect all emails
+  const handleSelectAllEmails = () => {
+    if (selectedEmails.length === workspaceUsers.length) {
+      setSelectedEmails([]);
     } else {
-      return [...prev, email];
+      setSelectedEmails(workspaceUsers.map((user) => user.email));
     }
-  });
-};
+  };
 
-// Function to select/deselect all emails
-const handleSelectAllEmails = () => {
-  if (selectedEmails.length === workspaceUsers.length) {
-    setSelectedEmails([]);
-  } else {
-    setSelectedEmails(workspaceUsers.map(user => user.email));
-  }
-};
+  // Update your handleSetCronInterval function to include selected emails
+  const handleSetCronInterval = async (e) => {
+    e.preventDefault();
+    setCronError(null);
+    setCronSuccess(null);
+    setIsSubmittingCron(true);
 
-// Update your handleSetCronInterval function to include selected emails
-const handleSetCronInterval = async (e) => {
-  e.preventDefault();
-  setCronError(null);
-  setCronSuccess(null);
-  setIsSubmittingCron(true);
-
-  if (!cronDays || cronDays < 0) {
-    setCronError("Please enter valid days (minimum 0).");
-    setIsSubmittingCron(false);
-    return;
-  }
-
-  if (selectedEmails.length === 0) {
-    setCronError("Please select at least one email address for notifications.");
-    setIsSubmittingCron(false);
-    return;
-  }
-
-  try {
-    console.log("Setting cron interval:", { 
-      days: parseInt(cronDays), 
-      hours: 0, 
-      minutes: 0, 
-      emails: selectedEmails 
-    });
-    
-    const response = await api.post("/set-cron-interval", {
-      days: parseInt(cronDays),
-      hours: 0,
-      minutes: 0,
-      workspace_id: workspaceId,
-      role,
-      notification_emails: selectedEmails, // Add selected emails
-    });
-    
-    console.log("Set cron response:", response.data);
-    
-    const data = response.data;
-    if (data.success) {
-      setCronSuccess(data.message);
-      
-      setTimeout(async () => {
-        await fetchCronSchedule();
-      }, 500);
-      
-      setTimeout(() => {
-        setShowCronModal(false);
-        setCronDays("");
-        setCronHours("");
-        setCronMinutes("");
-        setCronSuccess(null);
-      }, 2000);
-    } else {
-      throw new Error(data.error || "Failed to set cron interval");
+    if (!cronDays || cronDays < 0) {
+      setCronError("Please enter valid days (minimum 0).");
+      setIsSubmittingCron(false);
+      return;
     }
-  } catch (err) {
-    console.error("Error setting cron interval:", err);
-    setCronError(err.message);
-  } finally {
-    setIsSubmittingCron(false);
-  }
-};
 
-  
+    if (selectedEmails.length === 0) {
+      setCronError(
+        "Please select at least one email address for notifications."
+      );
+      setIsSubmittingCron(false);
+      return;
+    }
+
+    try {
+      console.log("Setting cron interval:", {
+        days: parseInt(cronDays),
+        hours: 0,
+        minutes: 0,
+        emails: selectedEmails,
+      });
+
+      const response = await api.post("/set-cron-interval", {
+        days: parseInt(cronDays),
+        hours: 0,
+        minutes: 0,
+        workspace_id: workspaceId,
+        role,
+        notification_emails: selectedEmails, // Add selected emails
+      });
+
+      console.log("Set cron response:", response.data);
+
+      const data = response.data;
+      if (data.success) {
+        setCronSuccess(data.message);
+
+        setTimeout(async () => {
+          await fetchCronSchedule();
+        }, 500);
+
+        setTimeout(() => {
+          setShowCronModal(false);
+          setCronDays("");
+          setCronHours("");
+          setCronMinutes("");
+          setCronSuccess(null);
+        }, 2000);
+      } else {
+        throw new Error(data.error || "Failed to set cron interval");
+      }
+    } catch (err) {
+      console.error("Error setting cron interval:", err);
+      setCronError(err.message);
+    } finally {
+      setIsSubmittingCron(false);
+    }
+  };
+
   // const handleSetCronInterval = async (e) => {
   //   e.preventDefault();
   //   setCronError(null);
@@ -1319,7 +1322,7 @@ const handleSetCronInterval = async (e) => {
 
   //   try {
   //     console.log("Setting cron interval:", { days: parseInt(cronDays), hours: 0, minutes: 0 }); // Debug log
-      
+
   //     const response = await api.post("/set-cron-interval", {
   //       days: parseInt(cronDays),
   //       hours: 0, // Always set to 0
@@ -1327,18 +1330,18 @@ const handleSetCronInterval = async (e) => {
   //       workspace_id: workspaceId,
   //       role,
   //     });
-      
+
   //     console.log("Set cron response:", response.data); // Debug log
-      
+
   //     const data = response.data;
   //     if (data.success) {
   //       setCronSuccess(data.message);
-        
+
   //       // Wait a moment before refetching to ensure server has processed the update
   //       setTimeout(async () => {
   //         await fetchCronSchedule();
   //       }, 500);
-        
+
   //       setTimeout(() => {
   //         setShowCronModal(false);
   //         setCronDays("");
@@ -1367,62 +1370,69 @@ const handleSetCronInterval = async (e) => {
   //   });
   // };
 
-
-
   const formatDate = (dateString) => {
-  console.log("Formatting date:", dateString, typeof dateString); // Add this line for debugging
-  
-  if (!dateString) return "N/A";
-  
-  // Handle empty strings, null, undefined, or "N/A" values
-  if (dateString === "" || dateString === "N/A" || dateString === null || dateString === undefined) {
-    return "N/A";
-  }
-  
-  // Convert to string if it's not already
-  const dateStr = String(dateString).trim();
-  
-  // If it's already "N/A" or empty after trimming
-  if (dateStr === "" || dateStr.toLowerCase() === "n/a") {
-    return "N/A";
-  }
-  
-  try {
-    let date;
-    
-    // Handle different date formats
-    if (dateStr.includes('/')) {
-      // Handle DD/MM/YYYY format (common in Indian courts)
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        date = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`);
+    console.log("Formatting date:", dateString, typeof dateString); // Add this line for debugging
+
+    if (!dateString) return "N/A";
+
+    // Handle empty strings, null, undefined, or "N/A" values
+    if (
+      dateString === "" ||
+      dateString === "N/A" ||
+      dateString === null ||
+      dateString === undefined
+    ) {
+      return "N/A";
+    }
+
+    // Convert to string if it's not already
+    const dateStr = String(dateString).trim();
+
+    // If it's already "N/A" or empty after trimming
+    if (dateStr === "" || dateStr.toLowerCase() === "n/a") {
+      return "N/A";
+    }
+
+    try {
+      let date;
+
+      // Handle different date formats
+      if (dateStr.includes("/")) {
+        // Handle DD/MM/YYYY format (common in Indian courts)
+        const parts = dateStr.split("/");
+        if (parts.length === 3) {
+          date = new Date(
+            `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(
+              2,
+              "0"
+            )}`
+          );
+        } else {
+          date = new Date(dateStr);
+        }
       } else {
+        // Handle YYYY-MM-DD format or other formats
         date = new Date(dateStr);
       }
-    } else {
-      // Handle YYYY-MM-DD format or other formats
-      date = new Date(dateStr);
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.warn(`Invalid date format: ${dateString}`);
+        return dateString; // Return original string if can't parse
+      }
+
+      // Format the date
+      return date.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error(`Error formatting date: ${dateString}`, error);
+      return dateString; // Return original string if error occurs
     }
-    
-    // Check if the date is valid
-    if (isNaN(date.getTime())) {
-      console.warn(`Invalid date format: ${dateString}`);
-      return dateString; // Return original string if can't parse
-    }
-    
-    // Format the date
-    return date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "long", 
-      year: "numeric",
-    });
-  } catch (error) {
-    console.error(`Error formatting date: ${dateString}`, error);
-    return dateString; // Return original string if error occurs
-  }
-};
-  
-  
+  };
+
   const closeDetailsPopup = () => setShowCaseDetails(false);
 
   const goBack = () => navigate(-1);
@@ -2128,222 +2138,230 @@ const handleSetCronInterval = async (e) => {
       )} */}
 
       {showCronModal && role === "Owner" && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-      <div className="flex justify-between items-center border-b p-4">
-        <h3 className="text-lg font-semibold">Schedule Case Updates</h3>
-        <button
-          onClick={() => {
-            setShowCronModal(false);
-            setCronDays(cronSchedule?.days?.toString() || "");
-            setCronHours("");
-            setCronMinutes("");
-            setCronError(null);
-            setCronSuccess(null);
-            setShowEmailDropdown(false);
-          }}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <X size={20} />
-        </button>
-      </div>
-      
-      <form onSubmit={handleSetCronInterval} className="p-4">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Days
-          </label>
-          <input
-            type="number"
-            value={cronDays}
-            onChange={(e) => setCronDays(e.target.value)}
-            placeholder="Enter days (e.g., 1)"
-            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
-            min="0"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Updates will be scheduled to run every specified number of days
-          </p>
-        </div>
-
-        {/* Email Selection Field */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Notification Recipients
-          </label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowEmailDropdown(!showEmailDropdown)}
-              className="w-full border border-gray-300 rounded-md p-2 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 flex justify-between items-center"
-              disabled={isLoadingUsers}
-            >
-              <span className="text-sm">
-                {isLoadingUsers ? (
-                  "Loading users..."
-                ) : selectedEmails.length === 0 ? (
-                  "Select email addresses"
-                ) : selectedEmails.length === 1 ? (
-                  selectedEmails[0]
-                ) : (
-                  `${selectedEmails.length} emails selected`
-                )}
-              </span>
-              <svg
-                className={`w-4 h-4 transition-transform ${
-                  showEmailDropdown ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b p-4">
+              <h3 className="text-lg font-semibold">Schedule Case Updates</h3>
+              <button
+                onClick={() => {
+                  setShowCronModal(false);
+                  setCronDays(cronSchedule?.days?.toString() || "");
+                  setCronHours("");
+                  setCronMinutes("");
+                  setCronError(null);
+                  setCronSuccess(null);
+                  setShowEmailDropdown(false);
+                }}
+                className="text-gray-500 hover:text-gray-700"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+                <X size={20} />
+              </button>
+            </div>
 
-            {showEmailDropdown && !isLoadingUsers && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                {/* Select All Option */}
-                <div className="p-2 border-b">
-                  <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedEmails.length === workspaceUsers.length &&
-                        workspaceUsers.length > 0
-                      }
-                      onChange={handleSelectAllEmails}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Select All ({workspaceUsers.length})
+            <form onSubmit={handleSetCronInterval} className="p-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Days
+                </label>
+                <input
+                  type="number"
+                  value={cronDays}
+                  onChange={(e) => setCronDays(e.target.value)}
+                  placeholder="Enter days (e.g., 1)"
+                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  min="0"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Updates will be scheduled to run every specified number of
+                  days
+                </p>
+              </div>
+
+              {/* Email Selection Field */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notification Recipients
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailDropdown(!showEmailDropdown)}
+                    className="w-full border border-gray-300 rounded-md p-2 text-left bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 flex justify-between items-center"
+                    disabled={isLoadingUsers}
+                  >
+                    <span className="text-sm">
+                      {isLoadingUsers
+                        ? "Loading users..."
+                        : selectedEmails.length === 0
+                        ? "Select email addresses"
+                        : selectedEmails.length === 1
+                        ? selectedEmails[0]
+                        : `${selectedEmails.length} emails selected`}
                     </span>
-                  </label>
+                    <svg
+                      className={`w-4 h-4 transition-transform ${
+                        showEmailDropdown ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  {showEmailDropdown && !isLoadingUsers && (
+                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                      {/* Select All Option */}
+                      <div className="p-2 border-b">
+                        <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedEmails.length === workspaceUsers.length &&
+                              workspaceUsers.length > 0
+                            }
+                            onChange={handleSelectAllEmails}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            Select All ({workspaceUsers.length})
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Individual Email Options */}
+                      {workspaceUsers.map((user) => (
+                        <div key={user.id} className="p-2">
+                          <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input
+                              type="checkbox"
+                              checked={selectedEmails.includes(user.email)}
+                              onChange={() => handleEmailSelection(user.email)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-sm text-gray-900">
+                                {user.name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {user.email}
+                              </span>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs text-blue-600">
+                                  {user.role}
+                                </span>
+                                {user.status === "Owner" && (
+                                  <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
+                                    Current User
+                                  </span>
+                                )}
+                                {user.status === "Accepted" && (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">
+                                    Accepted
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      ))}
+
+                      {workspaceUsers.length === 0 && (
+                        <div className="p-3 text-sm text-gray-500 text-center">
+                          No accepted members found in this workspace
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Individual Email Options */}
-                {workspaceUsers.map((user) => (
-                  <div key={user.id} className="p-2">
-                    <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
-                      <input
-                        type="checkbox"
-                        checked={selectedEmails.includes(user.email)}
-                        onChange={() => handleEmailSelection(user.email)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">{user.name}</span>
-                        <span className="text-xs text-gray-500">{user.email}</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-blue-600">{user.role}</span>
-                          {user.status === "Owner" && (
-                            <span className="text-xs bg-green-100 text-green-800 px-1 rounded">
-                              Current User
-                            </span>
-                          )}
-                          {user.status === "Accepted" && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">
-                              Accepted
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                ))}
+                {usersError && (
+                  <p className="text-xs text-red-600 mt-1">{usersError}</p>
+                )}
 
-                {workspaceUsers.length === 0 && (
-                  <div className="p-3 text-sm text-gray-500 text-center">
-                    No accepted members found in this workspace
+                <p className="text-xs text-gray-500 mt-1">
+                  Select users who will receive email notifications when case
+                  updates are found
+                </p>
+
+                {/* Selected Emails Preview */}
+                {selectedEmails.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-600 mb-1">
+                      Selected recipients:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedEmails.map((email) => (
+                        <span
+                          key={email}
+                          className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                        >
+                          {email}
+                          <button
+                            type="button"
+                            onClick={() => handleEmailSelection(email)}
+                            className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          {usersError && (
-            <p className="text-xs text-red-600 mt-1">{usersError}</p>
-          )}
+              {cronError && <ErrorMessage message={cronError} />}
+              {cronSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                  <p className="text-sm text-green-700">{cronSuccess}</p>
+                </div>
+              )}
 
-          <p className="text-xs text-gray-500 mt-1">
-            Select users who will receive email notifications when case updates are found
-          </p>
-
-          {/* Selected Emails Preview */}
-          {selectedEmails.length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs text-gray-600 mb-1">Selected recipients:</p>
-              <div className="flex flex-wrap gap-1">
-                {selectedEmails.map((email) => (
-                  <span
-                    key={email}
-                    className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                  >
-                    {email}
-                    <button
-                      type="button"
-                      onClick={() => handleEmailSelection(email)}
-                      className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCronModal(false);
+                    setCronDays(cronSchedule?.days?.toString() || "");
+                    setCronHours("");
+                    setCronMinutes("");
+                    setCronError(null);
+                    setCronSuccess(null);
+                    setShowEmailDropdown(false);
+                  }}
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmittingCron || selectedEmails.length === 0}
+                >
+                  {isSubmittingCron ? (
+                    <>
+                      <span>Submitting...</span>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    </>
+                  ) : (
+                    <>
+                      <ClockIcon size={18} />
+                      <span>Schedule</span>
+                    </>
+                  )}
+                </button>
               </div>
-            </div>
-          )}
-        </div>
-
-        {cronError && <ErrorMessage message={cronError} />}
-        {cronSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-            <p className="text-sm text-green-700">{cronSuccess}</p>
+            </form>
           </div>
-        )}
-        
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setShowCronModal(false);
-              setCronDays(cronSchedule?.days?.toString() || "");
-              setCronHours("");
-              setCronMinutes("");
-              setCronError(null);
-              setCronSuccess(null);
-              setShowEmailDropdown(false);
-            }}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isSubmittingCron || selectedEmails.length === 0}
-          >
-            {isSubmittingCron ? (
-              <>
-                <span>Submitting...</span>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              </>
-            ) : (
-              <>
-                <ClockIcon size={18} />
-                <span>Schedule</span>
-              </>
-            )}
-          </button>
         </div>
-      </form>
-    </div>
-  </div>
-)}
+      )}
 
       {/* Case Details Modal */}
       {showCaseDetails && activeCourtTab === "district" && (

@@ -3,6 +3,7 @@ import { Search, X, ExternalLink, Star, ShoppingCart } from "lucide-react";
 import api from "@/utils/api";
 import { useParams } from "react-router-dom";
 import CaseDetailsModal from "./CaseDetailsModal";
+import { jwtDecode } from "jwt-decode";
 
 // Error Message Component
 const ErrorMessage = ({ message }) => (
@@ -403,10 +404,14 @@ const PartySearchPage = ({
     : [];
 
   const handleSubmit = async (e) => {
+    // const token = localStorage.getItem("token");
+    // const { sub, role, workspaceId } = jwtDecode(token);
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const response = await api.post(
@@ -434,7 +439,7 @@ const PartySearchPage = ({
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
           usage: data?.length === 0 ? 1 : data?.length,
         },
         {
@@ -460,7 +465,6 @@ const PartySearchPage = ({
       setIsLoading(false);
     }
   };
-
 
   const handleViewDetails = async (result, rowIndex) => {
     setIsLoadingDetails(true);

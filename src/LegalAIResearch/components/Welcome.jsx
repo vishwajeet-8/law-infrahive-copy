@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Search,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import PDFViewer from "./PDFViewer";
 import api from "@/utils/api";
+import { jwtDecode } from "jwt-decode";
 
 const KnowledgeData = () => {
   // Search state
@@ -31,6 +31,8 @@ const KnowledgeData = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    // const token = localStorage.getItem("token");
+    // const { sub, role, workspaceId } = jwtDecode(token);
 
     if (!keyword.trim() || !query.trim()) {
       setError("Please enter both keyword and query");
@@ -40,6 +42,8 @@ const KnowledgeData = () => {
     setIsLoading(true);
     setError(null);
     setSearchResults(null);
+    const token = localStorage.getItem("token");
+    const { sub, role, email } = jwtDecode(token);
 
     try {
       const requestBody = {
@@ -68,7 +72,7 @@ const KnowledgeData = () => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
         },
         {
           headers: {
@@ -98,11 +102,14 @@ const KnowledgeData = () => {
     }
   };
 
-
   const loadPdfData = async (url, caseId) => {
+    const token = localStorage.getItem("token");
+    const { sub, role, workspaceId } = jwtDecode(token);
     setLoadingPdf(true);
     setCurrentCaseId(caseId);
     setPdfError(null);
+    // const token = localStorage.getItem("token");
+    // const { sub, role, email } = jwtDecode(token);
 
     try {
       // Use the dynamic endpoint URL with caseId
@@ -129,7 +136,7 @@ const KnowledgeData = () => {
       await api.post(
         "/research-credit",
         {
-          userId: JSON.parse(localStorage.getItem("user")).id,
+          userId: sub,
         },
         {
           headers: {

@@ -362,11 +362,6 @@
 
 // export default FileUpload;
 
-
-
-
-
-
 import React, { useState } from "react";
 import {
   Upload,
@@ -427,30 +422,34 @@ const FileUpload = ({ files, setFiles, onNext }) => {
 
   const fetchDocumentFiles = async (folderId = null) => {
     if (!workspaceId) return;
-    
+
     setIsFetchingDocuments(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const params = new URLSearchParams();
-      if (folderId) params.append('folderId', folderId);
-      
-      const url = `${import.meta.env.VITE_API_URL}legal-api/list-documents/${workspaceId}${params.toString() ? `?${params.toString()}` : ''}`;
-      
+      if (folderId) params.append("folderId", folderId);
+
+      const url = `${
+        import.meta.env.VITE_API_URL
+      }/legal-api/list-documents/${workspaceId}${
+        params.toString() ? `?${params.toString()}` : ""
+      }`;
+
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch documents: ${response.statusText}`);
       }
-      
+
       const documents = await response.json();
       setDocumentFiles(documents);
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error("Error fetching documents:", error);
       setDocumentFiles([]);
     } finally {
       setIsFetchingDocuments(false);
@@ -465,7 +464,10 @@ const FileUpload = ({ files, setFiles, onNext }) => {
   };
 
   const handleFolderClick = async (folder) => {
-    setFolderPath(prev => [...prev, { id: folder.id, name: folder.filename }]);
+    setFolderPath((prev) => [
+      ...prev,
+      { id: folder.id, name: folder.filename },
+    ]);
     setCurrentFolderId(folder.id);
     await fetchDocumentFiles(folder.id);
   };
@@ -474,8 +476,9 @@ const FileUpload = ({ files, setFiles, onNext }) => {
     const newPath = [...folderPath];
     newPath.pop();
     setFolderPath(newPath);
-    
-    const parentFolderId = newPath.length > 0 ? newPath[newPath.length - 1].id : null;
+
+    const parentFolderId =
+      newPath.length > 0 ? newPath[newPath.length - 1].id : null;
     setCurrentFolderId(parentFolderId);
     await fetchDocumentFiles(parentFolderId);
   };
@@ -483,7 +486,7 @@ const FileUpload = ({ files, setFiles, onNext }) => {
   const handleBreadcrumbClick = async (index) => {
     const newPath = folderPath.slice(0, index + 1);
     setFolderPath(newPath);
-    
+
     const targetFolderId = index === -1 ? null : newPath[index].id;
     setCurrentFolderId(targetFolderId);
     await fetchDocumentFiles(targetFolderId);
@@ -495,8 +498,9 @@ const FileUpload = ({ files, setFiles, onNext }) => {
 
     try {
       setIsImporting(true);
-      const documentsToImport = documentFiles
-        .filter((item) => item.type === 'file' && selectedDocuments.includes(item.id));
+      const documentsToImport = documentFiles.filter(
+        (item) => item.type === "file" && selectedDocuments.includes(item.id)
+      );
 
       const importedFiles = await Promise.all(
         documentsToImport.map(async (doc) => {
@@ -721,12 +725,13 @@ const FileUpload = ({ files, setFiles, onNext }) => {
                     <div
                       key={item.id}
                       className={`flex items-center p-3 rounded-lg cursor-pointer ${
-                        item.type === 'file' && selectedDocuments.includes(item.id)
+                        item.type === "file" &&
+                        selectedDocuments.includes(item.id)
                           ? "bg-blue-50 border border-blue-200"
                           : "hover:bg-gray-50"
                       }`}
                       onClick={() => {
-                        if (item.type === 'folder') {
+                        if (item.type === "folder") {
                           handleFolderClick(item);
                         } else {
                           setSelectedDocuments((prev) =>
@@ -737,7 +742,7 @@ const FileUpload = ({ files, setFiles, onNext }) => {
                         }
                       }}
                     >
-                      {item.type === 'folder' ? (
+                      {item.type === "folder" ? (
                         <Folder className="w-5 h-5 text-blue-500 mr-3" />
                       ) : (
                         <FileText className="w-5 h-5 text-gray-500 mr-3" />
@@ -745,7 +750,7 @@ const FileUpload = ({ files, setFiles, onNext }) => {
                       <span className="flex-1 text-sm font-medium text-gray-900">
                         {item.filename}
                       </span>
-                      {item.type === 'folder' ? (
+                      {item.type === "folder" ? (
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                       ) : (
                         <input
@@ -759,7 +764,9 @@ const FileUpload = ({ files, setFiles, onNext }) => {
                   ))
                 ) : (
                   <p className="text-gray-500 text-center">
-                    {folderPath.length > 0 ? "This folder is empty" : "No documents available"}
+                    {folderPath.length > 0
+                      ? "This folder is empty"
+                      : "No documents available"}
                   </p>
                 )}
               </div>

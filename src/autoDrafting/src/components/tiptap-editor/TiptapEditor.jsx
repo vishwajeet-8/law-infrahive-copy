@@ -45,6 +45,7 @@ import api from "@/utils/api";
 import axios from "axios";
 import SelectTemplate from "./components/select-template.jsx";
 import SelectDrafting from "./components/select-drafting.jsx";
+import { jwtDecode } from "jwt-decode";
 
 // Variable Highlighting Extension
 const VariableHighlight = Extension.create({
@@ -894,6 +895,8 @@ const TiptapEditor = () => {
 
   const handleImportDocument = useCallback(
     async (source, fileOrDoc) => {
+      const token = localStorage.getItem("token");
+      const { sub } = jwtDecode(token);
       setIsImporting(true);
       try {
         let file;
@@ -944,7 +947,7 @@ const TiptapEditor = () => {
         await api.post(
           "/extraction-credit",
           {
-            userId: JSON.parse(localStorage.getItem("user")).id,
+            userId: sub,
             usage: apiData.usage.output_tokens,
             type: "Drafting Template Convert",
           },
@@ -1893,8 +1896,23 @@ const TiptapEditor = () => {
             setShowImageModal={setShowImageModal}
             imageUrl={imageUrl}
             setImageUrl={setImageUrl}
+            // onAddImage={(url) => {
+            //   if (editor && url) {
+            //     editor.chain().focus().setImage({ src: url }).run();
+            //   }
+            //   setShowImageModal(false);
+            //   setImageUrl("");
+            // }}
             onAddImage={(url) => {
               if (editor && url) {
+                // NEW: Block SVG URLs
+                if (
+                  url.toLowerCase().endsWith(".svg") ||
+                  url.includes("image/svg+xml")
+                ) {
+                  alert("SVG images are not allowed for security reasons.");
+                  return;
+                }
                 editor.chain().focus().setImage({ src: url }).run();
               }
               setShowImageModal(false);

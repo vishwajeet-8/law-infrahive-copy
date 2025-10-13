@@ -17,6 +17,7 @@ import { renderToString } from "react-dom/server";
 import api from "@/utils/api";
 import { useNavigate, useResolvedPath } from "react-router-dom";
 import sanitizeHtml from "sanitize-html";
+import { jwtDecode } from "jwt-decode";
 
 export const AIFloatingWindow = ({ isOpen, onClose, onInsert }) => {
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ export const AIFloatingWindow = ({ isOpen, onClose, onInsert }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "https://apilegalnod.infrahive.ai/legal-api/get-workspaces",
+        `${import.meta.env.VITE_NODE_SERVER}/get-workspaces`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -115,8 +116,8 @@ export const AIFloatingWindow = ({ isOpen, onClose, onInsert }) => {
       if (folderId) params.append("folderId", folderId);
 
       const url = `${
-        import.meta.env.VITE_API_URL
-      }legal-api/list-documents/${workspaceId}${
+        import.meta.env.VITE_NODE_SERVER
+      }/list-documents/${workspaceId}${
         params.toString() ? `?${params.toString()}` : ""
       }`;
 
@@ -488,6 +489,8 @@ export const AIFloatingWindow = ({ isOpen, onClose, onInsert }) => {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
+    const token = localStorage.getItem("token");
+    const { sub } = jwtDecode(token);
 
     setIsGenerating(true);
     setError("");
@@ -569,6 +572,9 @@ export const AIFloatingWindow = ({ isOpen, onClose, onInsert }) => {
       let contentMap = new Map();
       let buffer = ""; // Buffer to handle incomplete JSON
 
+      const token = localStorage.getItem("token");
+      const { sub } = jwtDecode(token);
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -589,7 +595,7 @@ export const AIFloatingWindow = ({ isOpen, onClose, onInsert }) => {
                 await api.post(
                   "/extraction-credit",
                   {
-                    userId: JSON.parse(localStorage.getItem("user")).id,
+                    userId: sub,
                     usage: parsed.usage.output_tokens,
                     type: "Drafting Editor",
                   },
